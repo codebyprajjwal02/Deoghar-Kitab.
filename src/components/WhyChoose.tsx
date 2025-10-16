@@ -1,25 +1,28 @@
 import { motion } from "framer-motion";
 import { Wallet, Recycle, Users } from "lucide-react";
-
-const features = [
-  {
-    icon: Wallet,
-    title: "Save Money",
-    description: "Buy quality books at a fraction of the original price and make your reading more affordable",
-  },
-  {
-    icon: Recycle,
-    title: "Declutter & Earn",
-    description: "Turn your unused books into cash while helping others discover great stories",
-  },
-  {
-    icon: Users,
-    title: "Community Driven",
-    description: "Join a passionate community of book lovers committed to sustainable reading",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const WhyChoose = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Wallet,
+      title: t.whyChoose.saveMoney,
+      description: t.whyChoose.saveMoneyDesc,
+    },
+    {
+      icon: Recycle,
+      title: t.whyChoose.declutter,
+      description: t.whyChoose.declutterDesc,
+    },
+    {
+      icon: Users,
+      title: t.whyChoose.community,
+      description: t.whyChoose.communityDesc,
+    },
+  ];
+
   return (
     <section id="why" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -31,10 +34,10 @@ const WhyChoose = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Why Choose <span className="text-primary">Deoghar Kitab</span>
+            {t.whyChoose.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            More than just a marketplace — a movement towards sustainable and accessible reading
+            {t.whyChoose.subtitle}
           </p>
         </motion.div>
 

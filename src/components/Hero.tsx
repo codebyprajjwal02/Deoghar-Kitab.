@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import heroImage from "@/assets/hero-books.jpg";
 
 const Hero = () => {
+  const { t } = useLanguage();
+
   const scrollToNext = () => {
     const browseSection = document.getElementById("browse");
     browseSection?.scrollIntoView({ behavior: "smooth" });
@@ -36,22 +39,23 @@ const Hero = () => {
           className="max-w-3xl"
         >
           <motion.h1
+            key={t.hero.headline}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
           >
-            Buy. Sell. Repeat.{" "}
-            <span className="text-primary">Discover Stories</span> That Deserve a Second Life.
+            {t.hero.headline}
           </motion.h1>
 
           <motion.p
+            key={t.hero.subtext}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-xl md:text-2xl mb-8 text-white/90"
           >
-            A marketplace for students and book lovers to buy and sell second-hand books easily.
+            {t.hero.subtext}
           </motion.p>
 
           <motion.div
@@ -66,7 +70,7 @@ const Hero = () => {
               className="hover:scale-105 hover:shadow-glow transition-all text-lg px-8"
               onClick={scrollToNext}
             >
-              Browse Books
+              {t.hero.browseBooksBtn}
             </Button>
             <Button
               size="lg"
@@ -74,7 +78,7 @@ const Hero = () => {
               className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-foreground transition-all text-lg px-8"
               onClick={() => document.getElementById("sell")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Sell Your Book
+              {t.hero.sellBookBtn}
             </Button>
           </motion.div>
         </motion.div>

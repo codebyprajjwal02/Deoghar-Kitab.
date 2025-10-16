@@ -3,6 +3,7 @@ import { Upload, DollarSign, Camera, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,8 @@ import {
 } from "@/components/ui/select";
 
 const SellSection = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="sell" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -23,10 +26,10 @@ const SellSection = () => {
           className="text-center mb-12"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Sell Your <span className="text-primary">Book</span>
+            {t.sell.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Turn your unused books into cash. List your book in minutes and reach thousands of readers
+            {t.sell.subtitle}
           </p>
         </motion.div>
 
@@ -45,9 +48,9 @@ const SellSection = () => {
                   <BookOpen className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Add Book Details</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t.sell.step1Title}</h3>
                   <p className="text-muted-foreground">
-                    Provide title, author, condition, and a fair price for your book
+                    {t.sell.step1Desc}
                   </p>
                 </div>
               </div>
@@ -57,9 +60,9 @@ const SellSection = () => {
                   <Camera className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Upload Photos</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t.sell.step2Title}</h3>
                   <p className="text-muted-foreground">
-                    Take clear photos of your book's cover and condition
+                    {t.sell.step2Desc}
                   </p>
                 </div>
               </div>
@@ -69,9 +72,9 @@ const SellSection = () => {
                   <DollarSign className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Start Selling</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t.sell.step3Title}</h3>
                   <p className="text-muted-foreground">
-                    Once approved, your book will be visible to thousands of buyers
+                    {t.sell.step3Desc}
                   </p>
                 </div>
               </div>
@@ -87,56 +90,56 @@ const SellSection = () => {
             >
               <form className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Book Title</label>
-                  <Input placeholder="Enter book title" className="focus:ring-2 focus:ring-primary" />
+                  <label className="block text-sm font-medium mb-2">{t.sell.bookTitle}</label>
+                  <Input placeholder={t.sell.titlePlaceholder} className="focus:ring-2 focus:ring-primary" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Author</label>
-                  <Input placeholder="Enter author name" className="focus:ring-2 focus:ring-primary" />
+                  <label className="block text-sm font-medium mb-2">{t.sell.author}</label>
+                  <Input placeholder={t.sell.authorPlaceholder} className="focus:ring-2 focus:ring-primary" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Condition</label>
+                    <label className="block text-sm font-medium mb-2">{t.sell.condition}</label>
                     <Select>
                       <SelectTrigger className="focus:ring-2 focus:ring-primary">
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder={t.sell.select} />
                       </SelectTrigger>
                       <SelectContent className="bg-card z-50">
-                        <SelectItem value="excellent">Excellent</SelectItem>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
+                        <SelectItem value="excellent">{t.browse.excellent}</SelectItem>
+                        <SelectItem value="good">{t.browse.good}</SelectItem>
+                        <SelectItem value="fair">{t.browse.fair}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Price (₹)</label>
+                    <label className="block text-sm font-medium mb-2">{t.sell.price}</label>
                     <Input type="number" placeholder="299" className="focus:ring-2 focus:ring-primary" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">{t.sell.description}</label>
                   <Textarea
-                    placeholder="Tell buyers about your book..."
+                    placeholder={t.sell.descriptionPlaceholder}
                     rows={4}
                     className="focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Upload Photos</label>
+                  <label className="block text-sm font-medium mb-2">{t.sell.uploadPhotos}</label>
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer group">
                     <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
                     <p className="text-sm text-muted-foreground">
-                      Click to upload or drag and drop
+                      {t.sell.uploadText}
                     </p>
                   </div>
                 </div>
 
                 <Button type="submit" className="w-full hover:scale-105 transition-transform">
-                  List Your Book
+                  {t.sell.listBookBtn}
                 </Button>
               </form>
             </motion.div>

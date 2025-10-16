@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
-import { BookOpen, Facebook, Twitter, Instagram, Mail, ArrowRight } from "lucide-react";
+import { BookOpen, Facebook, Twitter, Instagram, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
@@ -20,7 +23,7 @@ const Footer = () => {
               <span className="text-xl font-bold">Deoghar Kitab</span>
             </div>
             <p className="text-background/70 mb-6">
-              Your trusted marketplace for buying and selling second-hand books. Join our community of book lovers today.
+              {t.footer.description}
             </p>
             <div className="flex gap-4">
               <a
@@ -51,9 +54,14 @@ const Footer = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-3">
-              {["Browse Books", "Sell a Book", "How It Works", "About Us"].map((link) => (
+              {[
+                t.footer.browseBooks,
+                t.footer.sellBook,
+                t.footer.howItWorks,
+                t.footer.aboutUs,
+              ].map((link) => (
                 <li key={link}>
                   <a
                     href="#"
@@ -73,9 +81,14 @@ const Footer = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <h3 className="text-lg font-semibold mb-4">{t.footer.support}</h3>
             <ul className="space-y-3">
-              {["FAQ", "Shipping Info", "Returns", "Contact Us"].map((link) => (
+              {[
+                t.footer.faq,
+                t.footer.shipping,
+                t.footer.returns,
+                t.footer.contact,
+              ].map((link) => (
                 <li key={link}>
                   <a
                     href="#"
@@ -95,14 +108,14 @@ const Footer = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-lg font-semibold mb-4">Stay Updated</h3>
+            <h3 className="text-lg font-semibold mb-4">{t.footer.stayUpdated}</h3>
             <p className="text-background/70 mb-4">
-              Subscribe to get special offers and updates on new arrivals
+              {t.footer.newsletterText}
             </p>
             <div className="flex gap-2">
               <Input
                 type="email"
-                placeholder="Your email"
+                placeholder={t.footer.emailPlaceholder}
                 className="bg-background/10 border-background/20 text-background placeholder:text-background/50 focus:ring-2 focus:ring-primary"
               />
               <Button
@@ -124,14 +137,14 @@ const Footer = () => {
           className="pt-8 border-t border-background/10 flex flex-col md:flex-row justify-between items-center gap-4"
         >
           <p className="text-background/70 text-sm">
-            © 2025 Deoghar Kitab. All rights reserved.
+            {t.footer.copyright}
           </p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-background/70 hover:text-primary transition-colors">
-              Privacy Policy
+              {t.footer.privacyPolicy}
             </a>
             <a href="#" className="text-background/70 hover:text-primary transition-colors">
-              Terms of Service
+              {t.footer.termsOfService}
             </a>
           </div>
         </motion.div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Search, Heart, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ const books = [
 ];
 
 const BrowseBooks = () => {
+  const { t } = useLanguage();
   const [favorites, setFavorites] = useState<number[]>([]);
 
   const toggleFavorite = (id: number) => {
@@ -83,10 +85,10 @@ const BrowseBooks = () => {
           className="text-center mb-12"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Browse <span className="text-primary">Books</span>
+            {t.browse.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover your next favorite story from our curated collection of second-hand books
+            {t.browse.subtitle}
           </p>
         </motion.div>
 
@@ -101,39 +103,39 @@ const BrowseBooks = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search by title or author..."
+              placeholder={t.browse.searchPlaceholder}
               className="pl-10"
             />
           </div>
           <Select>
             <SelectTrigger className="md:w-[180px]">
-              <SelectValue placeholder="Genre" />
+              <SelectValue placeholder={t.browse.genre} />
             </SelectTrigger>
             <SelectContent className="bg-card z-50">
-              <SelectItem value="fiction">Fiction</SelectItem>
-              <SelectItem value="nonfiction">Non-Fiction</SelectItem>
-              <SelectItem value="mystery">Mystery</SelectItem>
-              <SelectItem value="romance">Romance</SelectItem>
+              <SelectItem value="fiction">{t.browse.fiction}</SelectItem>
+              <SelectItem value="nonfiction">{t.browse.nonfiction}</SelectItem>
+              <SelectItem value="mystery">{t.browse.mystery}</SelectItem>
+              <SelectItem value="romance">{t.browse.romance}</SelectItem>
             </SelectContent>
           </Select>
           <Select>
             <SelectTrigger className="md:w-[180px]">
-              <SelectValue placeholder="Condition" />
+              <SelectValue placeholder={t.browse.condition} />
             </SelectTrigger>
             <SelectContent className="bg-card z-50">
-              <SelectItem value="excellent">Excellent</SelectItem>
-              <SelectItem value="good">Good</SelectItem>
-              <SelectItem value="fair">Fair</SelectItem>
+              <SelectItem value="excellent">{t.browse.excellent}</SelectItem>
+              <SelectItem value="good">{t.browse.good}</SelectItem>
+              <SelectItem value="fair">{t.browse.fair}</SelectItem>
             </SelectContent>
           </Select>
           <Select>
             <SelectTrigger className="md:w-[180px]">
-              <SelectValue placeholder="Price Range" />
+              <SelectValue placeholder={t.browse.priceRange} />
             </SelectTrigger>
             <SelectContent className="bg-card z-50">
-              <SelectItem value="low">Under ₹200</SelectItem>
-              <SelectItem value="mid">₹200 - ₹400</SelectItem>
-              <SelectItem value="high">Above ₹400</SelectItem>
+              <SelectItem value="low">{t.browse.underPrice}</SelectItem>
+              <SelectItem value="mid">{t.browse.midPrice}</SelectItem>
+              <SelectItem value="high">{t.browse.abovePrice}</SelectItem>
             </SelectContent>
           </Select>
         </motion.div>
@@ -184,7 +186,7 @@ const BrowseBooks = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-primary">₹{book.price}</span>
                   <Button size="sm" className="hover:scale-105 transition-transform">
-                    View Details
+                    {t.browse.viewDetails}
                   </Button>
                 </div>
               </div>

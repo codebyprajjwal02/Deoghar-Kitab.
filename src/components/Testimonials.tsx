@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const testimonials = [
   {
@@ -26,6 +27,8 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="testimonials" className="py-20 bg-muted/30 relative overflow-hidden">
       {/* Decorative Elements */}
@@ -41,10 +44,10 @@ const Testimonials = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            What Our <span className="text-primary">Readers Say</span>
+            {t.testimonials.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of happy book lovers who've found their perfect reads
+            {t.testimonials.subtitle}
           </p>
         </motion.div>
 

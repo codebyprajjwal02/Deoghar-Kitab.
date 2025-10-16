@@ -108,10 +108,23 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-body;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
 
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Smooth theme transitions */
+  * {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Preserve animation transitions */
+  *[class*="animate-"],
+  *[class*="transition-transform"],
+  *[class*="transition-all"] {
+    transition: all 0.3s ease;
   }
 }
 
