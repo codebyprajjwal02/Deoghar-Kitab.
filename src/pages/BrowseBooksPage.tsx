@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 // Sample book data - in a real app, this would come from an API
@@ -283,9 +282,7 @@ const BrowseBooksPage = () => {
   const categories = Array.from(new Set(allBooks.map(book => book.category)));
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
+    <div className="min-h-screen flex flex-col pt-20">
       <main className="flex-grow">
         <section className="py-8 bg-background">
           <div className="container mx-auto px-4">
