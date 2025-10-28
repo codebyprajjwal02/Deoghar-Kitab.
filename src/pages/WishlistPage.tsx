@@ -103,7 +103,7 @@ const WishlistPage = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any books to your wishlist yet.
               </p>
-              <Button onClick={() => navigate("/home#browse")}>
+              <Button onClick={() => navigate("/browse")}>
                 Browse Books
               </Button>
             </CardContent>
@@ -119,10 +119,10 @@ const WishlistPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate("/home#browse")}
+          onClick={() => navigate("/browse")}
         >
           <ArrowLeft className="w-4 h-4" />
-          Continue Browsing
+          Back to Browse
         </Button>
 
         <motion.div
@@ -130,47 +130,63 @@ const WishlistPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold">My Wishlist</h1>
+              <p className="text-muted-foreground">Books you're interested in buying</p>
+            </div>
+            <Badge variant="secondary" className="text-lg py-2 px-4">
+              {wishlist.length} items
+            </Badge>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlist.map((item) => (
-              <Card key={item.id} className="group">
-                <CardHeader className="p-0 relative">
-                  <div className="aspect-[3/4] overflow-hidden rounded-t-lg">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </div>
-                  <Badge className="absolute top-4 left-4 bg-primary text-white">
-                    {item.condition}
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-foreground hover:bg-primary hover:text-white transition-colors"
-                    onClick={() => removeFromWishlist(item.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-1 line-clamp-1">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{item.author}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-primary">₹{item.price}</span>
-                    <Button 
-                      size="sm" 
-                      className="hover:scale-105 transition-transform"
-                      onClick={() => moveToCart(item)}
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ y: -5 }}
+              >
+                <Card className="group h-full flex flex-col">
+                  <CardHeader className="p-0 relative">
+                    <div className="aspect-[3/4] overflow-hidden rounded-t-lg">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                    <Badge className="absolute top-4 left-4 bg-primary text-white">
+                      {item.condition}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-foreground hover:bg-destructive hover:text-white hover:border-destructive transition-all"
+                      onClick={() => removeFromWishlist(item.id)}
                     >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Move to Cart
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="p-4 flex-grow flex flex-col">
+                    <h3 className="font-semibold mb-1 line-clamp-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{item.author}</p>
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className="text-xl font-bold text-primary">₹{item.price}</span>
+                      <Button 
+                        size="sm" 
+                        className="hover:scale-105 transition-transform"
+                        onClick={() => moveToCart(item)}
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Move to Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </motion.div>

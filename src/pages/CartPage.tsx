@@ -7,10 +7,12 @@ import {
   Plus, 
   Minus,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // Define the cart item type
@@ -88,7 +90,7 @@ const CartPage = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any books to your cart yet.
               </p>
-              <Button onClick={() => navigate("/home")}>
+              <Button onClick={() => navigate("/browse")}>
                 Browse Books
               </Button>
             </CardContent>
@@ -104,7 +106,7 @@ const CartPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate("/home#browse")}
+          onClick={() => navigate("/browse")}
         >
           <ArrowLeft className="w-4 h-4" />
           Continue Shopping
@@ -126,19 +128,23 @@ const CartPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                    <motion.div 
+                      key={item.id} 
+                      className="flex gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow"
+                      whileHover={{ y: -2 }}
+                    >
                       <div className="aspect-[3/4] w-24 overflow-hidden rounded-md">
                         <img
                           src={item.image}
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         />
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="font-semibold">{item.title}</h3>
-                        <p className="text-sm text-muted-foreground">{item.author}</p>
-                        <p className="text-sm">{item.condition} Condition</p>
+                        <h3 className="font-semibold text-lg">{item.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-1">{item.author}</p>
+                        <Badge variant="secondary" className="mb-3">{item.condition} Condition</Badge>
                         
                         <div className="flex items-center justify-between mt-3">
                           <div className="flex items-center gap-2">
@@ -147,32 +153,35 @@ const CartPage = () => {
                               size="sm" 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               disabled={item.quantity <= 1}
+                              className="rounded-full"
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
-                            <span className="w-10 text-center">{item.quantity}</span>
+                            <span className="w-10 text-center font-medium">{item.quantity}</span>
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="rounded-full"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
                           
                           <div className="flex items-center gap-4">
-                            <span className="font-semibold">₹{item.price * item.quantity}</span>
+                            <span className="font-bold text-lg">₹{item.price * item.quantity}</span>
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => removeItem(item.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                              <Trash2 className="w-4 h-4 text-destructive" />
+                              <Trash2 className="w-5 h-5" />
                             </Button>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
@@ -180,40 +189,54 @@ const CartPage = () => {
             
             {/* Order Summary */}
             <div>
-              <Card>
+              <Card className="sticky top-8">
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>₹{totalPrice}</span>
+                      <span className="font-medium">₹{totalPrice}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span className="text-green-600">FREE</span>
+                      <span className="text-green-600 font-medium">FREE</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tax</span>
-                      <span>₹{Math.round(totalPrice * 0.18)}</span>
+                      <span>Tax (18%)</span>
+                      <span className="font-medium">₹{Math.round(totalPrice * 0.18)}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                    <div className="flex justify-between font-bold text-lg pt-3 border-t">
                       <span>Total</span>
-                      <span>₹{totalPrice + Math.round(totalPrice * 0.18)}</span>
+                      <span className="text-primary">₹{totalPrice + Math.round(totalPrice * 0.18)}</span>
                     </div>
                   </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Free Shipping</span> on orders over ₹499
+                    </p>
+                  </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-2">
-                  <Button className="w-full" onClick={handleCheckout}>
+                <CardFooter className="flex flex-col gap-3">
+                  <Button className="w-full py-6 text-lg hover:scale-[1.02] transition-transform" onClick={handleCheckout}>
                     Proceed to Checkout
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate("/home#browse")}>
+                  <Button variant="outline" className="w-full py-5" onClick={() => navigate("/browse")}>
                     Continue Shopping
                   </Button>
                 </CardFooter>
               </Card>
+              
+              {/* Secure Checkout Banner */}
+              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center">
+                  <ShieldCheck className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="text-sm text-green-800">Secure checkout with 256-bit encryption</span>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
