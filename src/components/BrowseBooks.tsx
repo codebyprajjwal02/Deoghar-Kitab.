@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { Search, Heart, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Heart, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,62 +16,169 @@ import { Badge } from "@/components/ui/badge";
 const books = [
   {
     id: 1,
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
+    title: "NCERT Mathematics Class 10",
+    author: "NCERT",
     price: 299,
     condition: "Good",
     image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
   },
   {
     id: 2,
-    title: "1984",
-    author: "George Orwell",
-    price: 249,
+    title: "RS Aggarwal Quantitative Aptitude",
+    author: "R.S. Aggarwal",
+    price: 449,
     condition: "Excellent",
     image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
   },
   {
     id: 3,
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
+    title: "Lucent's General Knowledge",
+    author: "Lucent Publication",
     price: 199,
     condition: "Fair",
     image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
   },
   {
     id: 4,
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    price: 349,
+    title: "RD Sharma Class 11",
+    author: "R.D. Sharma",
+    price: 599,
     condition: "Excellent",
     image: "https://images.unsplash.com/photo-1550399504-8953e1a1f1cb?w=400&h=600&fit=crop",
   },
   {
     id: 5,
-    title: "Moby Dick",
-    author: "Herman Melville",
-    price: 279,
+    title: "Arihant General Studies Paper 2",
+    author: "Arihant Experts",
+    price: 379,
     condition: "Good",
     image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop",
   },
   {
     id: 6,
-    title: "War and Peace",
-    author: "Leo Tolstoy",
-    price: 399,
+    title: "NCERT Science Class 9",
+    author: "NCERT",
+    price: 249,
     condition: "Good",
     image: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=400&h=600&fit=crop",
   },
 ];
 
+// Define the wishlist item type
+interface WishlistItem {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  image: string;
+  condition: string;
+}
+
+// Define the cart item type
+interface CartItem {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  image: string;
+  condition: string;
+  quantity: number;
+}
+
 const BrowseBooks = () => {
   const { t } = useLanguage();
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userString = localStorage.getItem("user");
+    setIsLoggedIn(!!userString);
+  }, []);
 
   const toggleFavorite = (id: number) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
-    );
+    if (!isLoggedIn) {
+      alert("Please sign in to add books to favorites");
+      window.location.href = "/";
+      return;
+    }
+    
+    // Find the book by ID
+    const book = books.find(b => b.id === id);
+    if (!book) return;
+    
+    // Get existing wishlist from localStorage or initialize empty array
+    const existingWishlist = localStorage.getItem("wishlist");
+    const wishlist: WishlistItem[] = existingWishlist ? JSON.parse(existingWishlist) : [];
+    
+    // Check if book already exists in wishlist
+    const existingItemIndex = wishlist.findIndex((item: WishlistItem) => item.id === book.id);
+    
+    if (existingItemIndex >= 0) {
+      // If book exists, remove it from wishlist
+      wishlist.splice(existingItemIndex, 1);
+    } else {
+      // If book doesn't exist, add it to wishlist
+      wishlist.push({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        price: book.price,
+        image: book.image,
+        condition: book.condition,
+      });
+    }
+    
+    // Save updated wishlist to localStorage
+    localStorage.setItem("wishlist", JSON.stringify(wishlist));
+    
+    // Update favorites state
+    if (existingItemIndex >= 0) {
+      setFavorites(prev => prev.filter(fav => fav !== id));
+    } else {
+      setFavorites(prev => [...prev, id]);
+    }
+  };
+
+  const handleAddToCart = (id: number) => {
+    if (!isLoggedIn) {
+      alert("Please sign in to add books to cart");
+      window.location.href = "/";
+      return;
+    }
+    
+    // Find the book by ID
+    const book = books.find(b => b.id === id);
+    if (!book) return;
+    
+    // Get existing cart from localStorage or initialize empty array
+    const existingCart = localStorage.getItem("cart");
+    const cart: CartItem[] = existingCart ? JSON.parse(existingCart) : [];
+    
+    // Check if book already exists in cart
+    const existingItemIndex = cart.findIndex((item: CartItem) => item.id === book.id);
+    
+    if (existingItemIndex >= 0) {
+      // If book exists, update quantity
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      // If book doesn't exist, add new item
+      cart.push({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        price: book.price,
+        image: book.image,
+        condition: book.condition,
+        quantity: 1
+      });
+    }
+    
+    // Save updated cart to localStorage
+    localStorage.setItem("cart", JSON.stringify(cart));
+    
+    // Show success message
+    alert(`Added "${book.title}" to cart!`);
   };
 
   return (
@@ -90,6 +197,15 @@ const BrowseBooks = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t.browse.subtitle}
           </p>
+          
+          {!isLoggedIn && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg inline-block">
+              <p className="text-blue-800 flex items-center justify-center gap-2">
+                <User className="w-4 h-4" />
+                <span>Sign in to save favorites and add books to cart</span>
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Filters */}
@@ -112,10 +228,12 @@ const BrowseBooks = () => {
               <SelectValue placeholder={t.browse.genre} />
             </SelectTrigger>
             <SelectContent className="bg-card z-50">
+              <SelectItem value="ncert">{t.browse.ncert}</SelectItem>
+              <SelectItem value="reference">{t.browse.reference}</SelectItem>
+              <SelectItem value="competitive">{t.browse.competitive}</SelectItem>
+              <SelectItem value="government">{t.browse.government}</SelectItem>
               <SelectItem value="fiction">{t.browse.fiction}</SelectItem>
               <SelectItem value="nonfiction">{t.browse.nonfiction}</SelectItem>
-              <SelectItem value="mystery">{t.browse.mystery}</SelectItem>
-              <SelectItem value="romance">{t.browse.romance}</SelectItem>
             </SelectContent>
           </Select>
           <Select>
@@ -170,7 +288,10 @@ const BrowseBooks = () => {
                   >
                     <Heart className="w-5 h-5" fill={favorites.includes(book.id) ? "currentColor" : "none"} />
                   </button>
-                  <button className="p-2 rounded-full bg-white/90 backdrop-blur-md text-foreground hover:bg-primary hover:text-white transition-colors">
+                  <button 
+                    onClick={() => handleAddToCart(book.id)}
+                    className="p-2 rounded-full bg-white/90 backdrop-blur-md text-foreground hover:bg-primary hover:text-white transition-colors"
+                  >
                     <ShoppingCart className="w-5 h-5" />
                   </button>
                 </div>
@@ -181,13 +302,22 @@ const BrowseBooks = () => {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2 line-clamp-1">{book.title}</h3>
-                <p className="text-muted-foreground mb-4">{book.author}</p>
+                {/* Link to book details page */}
+                <a href={`/book/${book.id}`} className="block">
+                  <h3 className="text-xl font-semibold mb-2 line-clamp-1">{book.title}</h3>
+                  <p className="text-muted-foreground mb-4">{book.author}</p>
+                </a>
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-primary">₹{book.price}</span>
-                  <Button size="sm" className="hover:scale-105 transition-transform">
-                    {t.browse.viewDetails}
-                  </Button>
+                  {/* Link to book details page on View Details button */}
+                  <a href={`/book/${book.id}`}>
+                    <Button 
+                      size="sm" 
+                      className="hover:scale-105 transition-transform"
+                    >
+                      {t.browse.viewDetails}
+                    </Button>
+                  </a>
                 </div>
               </div>
             </motion.div>

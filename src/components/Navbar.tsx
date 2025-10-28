@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Menu, X, Moon, Sun, Languages } from "lucide-react";
+import { BookOpen, Menu, X, Moon, Sun, Languages, User as UserIcon, LogOut, ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,6 +8,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [wishlistItemCount, setWishlistItemCount] = useState(0);
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
@@ -18,6 +22,76 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      const userData = JSON.parse(userString);
+      setIsLoggedIn(true);
+      setUser(userData);
+    }
+  }, []);
+
+  // Check cart item count
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = localStorage.getItem("cart");
+      if (cart) {
+        const cartItems = JSON.parse(cart);
+        const count = cartItems.reduce((total: number, item: { quantity: number }) => total + item.quantity, 0);
+        setCartItemCount(count);
+      } else {
+        setCartItemCount(0);
+      }
+    };
+
+    updateCartCount();
+    
+    // Listen for cart changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "cart") {
+        updateCartCount();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // Check wishlist item count
+  useEffect(() => {
+    const updateWishlistCount = () => {
+      const wishlist = localStorage.getItem("wishlist");
+      if (wishlist) {
+        const wishlistItems = JSON.parse(wishlist);
+        setWishlistItemCount(wishlistItems.length);
+      } else {
+        setWishlistItemCount(0);
+      }
+    };
+
+    updateWishlistCount();
+    
+    // Listen for wishlist changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "wishlist") {
+        updateWishlistCount();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const handleSignOut = () => {
+    // Remove user from localStorage
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    setUser(null);
+    // Redirect to home page
+    window.location.href = "/";
+  };
 
   const navLinks = [
     { label: t.navbar.browseBooks, href: "#browse" },
@@ -47,7 +121,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <a href="#hero" className="flex items-center gap-2 group">
+        <a href="/home" className="flex items-center gap-2 group">
           <BookOpen className="w-8 h-8 text-primary transition-transform group-hover:rotate-12" />
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Deoghar Kitab
@@ -65,6 +139,15 @@ const Navbar = () => {
               {link.label}
             </a>
           ))}
+          
+          {isLoggedIn && user?.userType !== "admin" && (
+            <a
+              href="/seller"
+              className="text-foreground/80 hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+            >
+              Seller Dashboard
+            </a>
+          )}
           
           {/* Language Toggle */}
           <motion.button
@@ -117,9 +200,51 @@ const Navbar = () => {
             </AnimatePresence>
           </motion.button>
 
-          <Button variant="default" className="hover:scale-105 transition-transform">
-            {t.navbar.signIn}
-          </Button>
+          {/* Wishlist Icon */}
+          <a href="/wishlist" className="relative text-foreground/80 hover:text-primary transition-colors">
+            <Heart className="w-5 h-5" />
+            {wishlistItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {wishlistItemCount}
+              </span>
+            )}
+          </a>
+
+          {/* Cart Icon */}
+          <a href="/cart" className="relative text-foreground/80 hover:text-primary transition-colors">
+            <ShoppingCart className="w-5 h-5" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            )}
+          </a>
+
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2">
+              {/* Profile Icon Only */}
+              <a href="/profile" className="text-foreground/80 hover:text-primary transition-colors">
+                <UserIcon className="w-5 h-5" />
+              </a>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSignOut}
+                className="flex items-center gap-1"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">Sign Out</span>
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              variant="default" 
+              className="hover:scale-105 transition-transform"
+              onClick={() => window.location.href = '/'}
+            >
+              {t.navbar.signIn}
+            </Button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -144,13 +269,23 @@ const Navbar = () => {
               {navLinks.map((link) => (
                 <a
                   key={link.href}
-                  href={link.href}
+                  href={link.href === '#hero' ? '/home#hero' : link.href}
                   className="text-foreground/80 hover:text-primary transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
                 </a>
               ))}
+              
+              {isLoggedIn && user?.userType !== "admin" && (
+                <a
+                  href="/seller"
+                  className="text-foreground/80 hover:text-primary transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Seller Dashboard
+                </a>
+              )}
               
               {/* Mobile Toggles */}
               <div className="flex gap-4 pt-2 border-t border-border">
@@ -175,9 +310,79 @@ const Navbar = () => {
                 </button>
               </div>
 
-              <Button variant="default" className="w-full">
-                {t.navbar.signIn}
-              </Button>
+              {/* Wishlist Icon in Mobile Menu */}
+              <a 
+                href="/wishlist" 
+                className="flex items-center gap-2 p-2 bg-muted rounded"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="relative">
+                  <Heart className="w-5 h-5" />
+                  {wishlistItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlistItemCount}
+                    </span>
+                  )}
+                </div>
+                <span>Wishlist</span>
+                {wishlistItemCount > 0 && (
+                  <span className="ml-auto text-sm">({wishlistItemCount} items)</span>
+                )}
+              </a>
+
+              {/* Cart Icon in Mobile Menu */}
+              <a 
+                href="/cart" 
+                className="flex items-center gap-2 p-2 bg-muted rounded"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
+                <span>Cart</span>
+                {cartItemCount > 0 && (
+                  <span className="ml-auto text-sm">({cartItemCount} items)</span>
+                )}
+              </a>
+
+              {isLoggedIn ? (
+                <div className="flex flex-col gap-2">
+                  <a 
+                    href="/profile" 
+                    className="text-foreground/80 hover:text-primary transition-colors py-2 text-center"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <UserIcon className="w-5 h-5 mx-auto" />
+                  </a>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="default" 
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = '/';
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  {t.navbar.signIn}
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

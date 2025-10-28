@@ -27,6 +27,10 @@ interface Translations {
     excellent: string;
     good: string;
     fair: string;
+    ncert: string;
+    reference: string;
+    competitive: string;
+    government: string;
     fiction: string;
     nonfiction: string;
     mystery: string;
@@ -90,6 +94,26 @@ interface Translations {
     returns: string;
     contact: string;
   };
+  auth: {
+    loginTitle: string;
+    signupTitle: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    rememberMe: string;
+    forgotPassword: string;
+    signIn: string;
+    signUp: string;
+    alreadyHaveAccount: string;
+    dontHaveAccount: string;
+    agreeToTerms: string;
+    termsOfService: string;
+    privacyPolicy: string;
+    buyer: string;
+    seller: string;
+    admin: string;
+    fullName: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -118,6 +142,10 @@ const translations: Record<Language, Translations> = {
       excellent: "Excellent",
       good: "Good",
       fair: "Fair",
+      ncert: "NCERT Books",
+      reference: "Reference Books",
+      competitive: "Competitive Exams",
+      government: "Government Exams",
       fiction: "Fiction",
       nonfiction: "Non-Fiction",
       mystery: "Mystery",
@@ -181,6 +209,26 @@ const translations: Record<Language, Translations> = {
       returns: "Returns",
       contact: "Contact Us",
     },
+    auth: {
+      loginTitle: "Welcome Back",
+      signupTitle: "Create Account",
+      email: "Email",
+      password: "Password",
+      confirmPassword: "Confirm Password",
+      rememberMe: "Remember me",
+      forgotPassword: "Forgot password?",
+      signIn: "Sign In",
+      signUp: "Sign Up",
+      alreadyHaveAccount: "Already have an account?",
+      dontHaveAccount: "Don't have an account?",
+      agreeToTerms: "I agree to the",
+      termsOfService: "Terms of Service",
+      privacyPolicy: "Privacy Policy",
+      buyer: "Buyer",
+      seller: "Seller",
+      admin: "Admin",
+      fullName: "Full Name",
+    },
   },
   hi: {
     navbar: {
@@ -207,6 +255,10 @@ const translations: Record<Language, Translations> = {
       excellent: "उत्कृष्ट",
       good: "अच्छा",
       fair: "ठीक",
+      ncert: "एनसीईआरटी किताबें",
+      reference: "संदर्भ पुस्तकें",
+      competitive: "प्रतियोगी परीक्षा",
+      government: "सरकारी परीक्षा",
       fiction: "कल्पना",
       nonfiction: "गैर-कल्पना",
       mystery: "रहस्य",
@@ -269,6 +321,26 @@ const translations: Record<Language, Translations> = {
       shipping: "शिपिंग जानकारी",
       returns: "वापसी",
       contact: "हमसे संपर्क करें",
+    },
+    auth: {
+      loginTitle: "वापसी पर स्वागत है",
+      signupTitle: "खाता बनाएं",
+      email: "ईमेल",
+      password: "पासवर्ड",
+      confirmPassword: "पासवर्ड की पुष्टि करें",
+      rememberMe: "मुझे याद रखें",
+      forgotPassword: "पासवर्ड भूल गए?",
+      signIn: "साइन इन करें",
+      signUp: "साइन अप करें",
+      alreadyHaveAccount: "क्या आपके पास पहले से एक खाता मौजूद है?",
+      dontHaveAccount: "क्या आपके पास खाता नहीं है?",
+      agreeToTerms: "मैं सहमत हूं",
+      termsOfService: "सेवा की शर्तें",
+      privacyPolicy: "गोपनीयता नीति",
+      buyer: "खरीदार",
+      seller: "विक्रेता",
+      admin: "व्यवस्थापक",
+      fullName: "पूरा नाम",
     },
   },
 };
