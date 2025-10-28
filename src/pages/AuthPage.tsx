@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 
+// Define user type
+interface RegisteredUser {
+  name: string;
+  email: string;
+  password: string;
+}
+
 const AuthPage = () => {
   const navigate = useNavigate();
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -23,6 +30,7 @@ const AuthPage = () => {
     confirmPassword: "",
   });
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
   // Check if user credentials are stored in localStorage
   useEffect(() => {
@@ -43,6 +51,8 @@ const AuthPage = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +61,8 @@ const AuthPage = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -62,12 +74,32 @@ const AuthPage = () => {
       return;
     }
     
-    // Handle user login logic here
-    console.log("Login submitted:", { ...loginData, userType });
+    // Get registered users from localStorage
+    const registeredUsersString = localStorage.getItem("registeredUsers");
+    const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
     
-    // Store user in localStorage to indicate they're logged in
+    // Find user by email
+    const user = registeredUsers.find((u: RegisteredUser) => u.email === loginData.email);
+    
+    // Check if user exists
+    if (!user) {
+      setError("No account found with this email. Please sign up first.");
+      return;
+    }
+    
+    // Check password
+    if (user.password !== loginData.password) {
+      setError("Incorrect password. Please try again.");
+      return;
+    }
+    
+    // Clear any previous errors
+    setError("");
+    
+    // Store current user in localStorage to indicate they're logged in
     localStorage.setItem("user", JSON.stringify({
-      email: loginData.email,
+      name: user.name,
+      email: user.email,
       userType: userType
     }));
     
@@ -86,10 +118,44 @@ const AuthPage = () => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log("Signup submitted:", signupData);
     
-    // Store user in localStorage to indicate they're logged in
+    // Validate password confirmation
+    if (signupData.password !== signupData.confirmPassword) {
+      setError("Passwords do not match. Please try again.");
+      return;
+    }
+    
+    // Validate password length
+    if (signupData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    
+    // Get registered users from localStorage
+    const registeredUsersString = localStorage.getItem("registeredUsers");
+    const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+    
+    // Check if user with this email already exists
+    const existingUser = registeredUsers.find((u: RegisteredUser) => u.email === signupData.email);
+    if (existingUser) {
+      setError("An account with this email already exists. Please sign in instead.");
+      return;
+    }
+    
+    // Clear any previous errors
+    setError("");
+    
+    // Add new user to registered users
+    const newUser: RegisteredUser = {
+      name: signupData.name,
+      email: signupData.email,
+      password: signupData.password,
+    };
+    
+    const updatedUsers = [...registeredUsers, newUser];
+    localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
+    
+    // Store current user in localStorage to indicate they're logged in
     localStorage.setItem("user", JSON.stringify({
       name: signupData.name,
       email: signupData.email,
@@ -128,6 +194,13 @@ const AuthPage = () => {
           </CardHeader>
           
           <CardContent>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             {/* User Type Toggle */}
             <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
               <button
@@ -351,7 +424,10 @@ const AuthPage = () => {
             <div className="text-sm text-center text-gray-600">
               {authMode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
               <button
-                onClick={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}
+                onClick={() => {
+                  setAuthMode(authMode === "signin" ? "signup" : "signin");
+                  setError(""); // Clear error when switching modes
+                }}
                 className="text-blue-600 font-medium hover:text-blue-800"
               >
                 {authMode === "signin" ? "Sign up" : "Sign in"}
