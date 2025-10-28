@@ -9,7 +9,8 @@ import {
   EyeOff, 
   Save, 
   Key,
-  Edit3
+  Edit3,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,9 +132,19 @@ const ProfilePage = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold">User Profile</h1>
-              <p className="text-muted-foreground">Manage your account settings</p>
+            <div className="flex items-center">
+              <Button 
+                onClick={() => navigate(-1)} 
+                variant="outline" 
+                className="mr-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">User Profile</h1>
+                <p className="text-muted-foreground">Manage your account settings</p>
+              </div>
             </div>
             <Button variant="outline" onClick={handleLogout}>
               Logout

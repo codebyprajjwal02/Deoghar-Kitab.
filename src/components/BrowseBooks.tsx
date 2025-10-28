@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 const books = [
   {
@@ -86,6 +87,7 @@ interface CartItem {
 }
 
 const BrowseBooks = () => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -322,6 +324,17 @@ const BrowseBooks = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* View More Button */}
+        <div className="text-center mt-12">
+          <Button 
+            onClick={() => navigate("/browse")}
+            size="lg"
+            className="px-8 py-6 text-lg hover:scale-105 transition-transform"
+          >
+            View More Books
+          </Button>
         </div>
       </div>
     </section>
