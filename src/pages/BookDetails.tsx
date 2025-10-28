@@ -200,9 +200,9 @@ const BookDetails = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/home")}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Books
         </Button>
 

@@ -89,7 +89,7 @@ const WishlistPage = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -103,7 +103,7 @@ const WishlistPage = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any books to your wishlist yet.
               </p>
-              <Button onClick={() => navigate("/browse")}>
+              <Button onClick={() => navigate("/home")}>
                 Browse Books
               </Button>
             </CardContent>
@@ -119,7 +119,7 @@ const WishlistPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate("/browse")}
+          onClick={() => navigate("/home")}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Browse

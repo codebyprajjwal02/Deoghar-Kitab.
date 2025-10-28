@@ -289,7 +289,7 @@ const BrowseBooksPage = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
               <div className="flex items-center">
                 <Button 
-                  onClick={() => navigate(-1)} 
+                  onClick={() => navigate("/home")} 
                   variant="outline" 
                   className="mr-4"
                 >

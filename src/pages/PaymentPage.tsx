@@ -154,7 +154,7 @@ const PaymentPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/home")}
         >
           <ArrowLeft className="w-4 h-4" />
           Back

@@ -134,7 +134,7 @@ const ProfilePage = () => {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center">
               <Button 
-                onClick={() => navigate(-1)} 
+                onClick={() => navigate("/home")} 
                 variant="outline" 
                 className="mr-4"
               >
