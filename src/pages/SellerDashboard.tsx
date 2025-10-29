@@ -38,6 +38,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+// Define interfaces for better type safety
+interface SellerData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+}
+
+interface SellerBook {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  status: string;
+  date: string;
+  sales: number;
+  revenue: number;
+  sellerEmail: string;
+  category?: string;
+  description?: string;
+}
+
 const SellerDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -55,9 +79,10 @@ const SellerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const [sellerData, setSellerData] = useState<SellerData | null>(null);
 
   // Load seller books from localStorage or use mock data
-  const [sellerBooks, setSellerBooks] = useState<any[]>(() => {
+  const [sellerBooks, setSellerBooks] = useState<SellerBook[]>(() => {
     const savedBooks = localStorage.getItem("sellerBooks");
     if (savedBooks) {
       return JSON.parse(savedBooks);
@@ -109,6 +134,12 @@ const SellerDashboard = () => {
     if (userString) {
       const userData = JSON.parse(userString);
       setUser(userData);
+      
+      // Load seller data
+      const sellerDataString = localStorage.getItem(`seller_${userData.email}`);
+      if (sellerDataString) {
+        setSellerData(JSON.parse(sellerDataString));
+      }
     } else {
       // Redirect to login if not logged in
       navigate("/");
@@ -193,11 +224,15 @@ const SellerDashboard = () => {
     return matchesSearch && matchesFilter;
   });
 
+  // Filter books for current seller only
+  const sellerSpecificBooks = sellerBooks.filter(book => book.sellerEmail === user?.email);
+
   const stats = [
-    { title: "Total Books", value: sellerBooks.length.toString(), icon: Book, change: "+2" },
-    { title: "Published", value: sellerBooks.filter(b => b.status === "Published").length.toString(), icon: BookOpen, change: "+1" },
-    { title: "Total Sales", value: sellerBooks.reduce((sum, book) => sum + book.sales, 0).toString(), icon: Package, change: "+3" },
-    { title: "Revenue", value: `₹${sellerBooks.reduce((sum, book) => sum + book.revenue, 0)}`, icon: DollarSign, change: "+₹450" },
+    { title: "Total Books", value: sellerSpecificBooks.length.toString(), icon: Book, change: "+2" },
+    { title: "Published", value: sellerSpecificBooks.filter(b => b.status === "Published").length.toString(), icon: BookOpen, change: "+1" },
+    { title: "Pending Approval", value: sellerSpecificBooks.filter(b => b.status === "Pending").length.toString(), icon: Filter, change: "+0" },
+    { title: "Total Sales", value: sellerSpecificBooks.reduce((sum, book) => sum + book.sales, 0).toString(), icon: Package, change: "+3" },
+    { title: "Revenue", value: `₹${sellerSpecificBooks.reduce((sum, book) => sum + book.revenue, 0)}`, icon: DollarSign, change: "+₹450" },
   ];
 
   return (
@@ -214,416 +249,377 @@ const SellerDashboard = () => {
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                 <User className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span>{user?.email}</span>
+              <div>
+                <span className="text-sm font-medium">{sellerData?.name || user?.email}</span>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
             </div>
-            <Button variant="outline" onClick={() => navigate("/home")}>
-              Back to Store
-            </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Stats Cards */}
+      {/* Stats Overview */}
+      <div className="container mx-auto py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className="w-5 h-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.change} from last month</p>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={stat.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                  <stat.icon className="w-5 h-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="flex items-center mt-1">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <p className="text-xs text-muted-foreground">{stat.change} from last month</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={activeTab === "add" ? "default" : "outline"}
+        {/* Navigation Tabs */}
+        <div className="flex border-b mb-6">
+          <button
+            className={`px-4 py-2 font-medium ${activeTab === "add" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
             onClick={() => setActiveTab("add")}
           >
-            <Plus className="w-4 h-4 mr-2" />
             Add New Book
-          </Button>
-          <Button
-            variant={activeTab === "manage" ? "default" : "outline"}
+          </button>
+          <button
+            className={`px-4 py-2 font-medium ${activeTab === "manage" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
             onClick={() => setActiveTab("manage")}
           >
-            <Package className="w-4 h-4 mr-2" />
             Manage Books
-          </Button>
-          <Button
-            variant={activeTab === "analytics" ? "default" : "outline"}
+          </button>
+          <button
+            className={`px-4 py-2 font-medium ${activeTab === "analytics" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
             onClick={() => setActiveTab("analytics")}
           >
-            <TrendingUp className="w-4 h-4 mr-2" />
             Analytics
-          </Button>
+          </button>
         </div>
 
-        {/* Tab Content */}
+        {/* Add Book Form */}
         {activeTab === "add" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Book</CardTitle>
-                <CardDescription>
-                  Fill in the details to list a new book for sale
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label htmlFor="title" className="text-sm font-medium">
-                        Book Title
-                      </label>
-                      <Input
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="Enter book title"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label htmlFor="author" className="text-sm font-medium">
-                        Author
-                      </label>
-                      <Input
-                        id="author"
-                        name="author"
-                        value={formData.author}
-                        onChange={handleInputChange}
-                        placeholder="Enter author name"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label htmlFor="price" className="text-sm font-medium">
-                        Price (₹)
-                      </label>
-                      <Input
-                        id="price"
-                        name="price"
-                        type="number"
-                        value={formData.price}
-                        onChange={handleInputChange}
-                        placeholder="Enter price"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Condition
-                      </label>
-                      <Select 
-                        value={formData.condition} 
-                        onValueChange={(value) => handleSelectChange("condition", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select condition" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="excellent">Excellent</SelectItem>
-                          <SelectItem value="good">Good</SelectItem>
-                          <SelectItem value="fair">Fair</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Category
-                      </label>
-                      <Select 
-                        value={formData.category} 
-                        onValueChange={(value) => handleSelectChange("category", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ncert">NCERT Books</SelectItem>
-                          <SelectItem value="reference">Reference Books</SelectItem>
-                          <SelectItem value="competitive">Competitive Exams</SelectItem>
-                          <SelectItem value="government">Government Exams</SelectItem>
-                          <SelectItem value="fiction">Fiction</SelectItem>
-                          <SelectItem value="non-fiction">Non-Fiction</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Book</CardTitle>
+              <CardDescription>List a new book for sale</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label htmlFor="description" className="text-sm font-medium">
-                      Description
-                    </label>
+                    <label htmlFor="title" className="text-sm font-medium">Book Title</label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      placeholder="Enter book title"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="author" className="text-sm font-medium">Author</label>
+                    <Input
+                      id="author"
+                      name="author"
+                      value={formData.author}
+                      onChange={handleInputChange}
+                      placeholder="Enter author name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="price" className="text-sm font-medium">Price (₹)</label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="Enter price"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="condition" className="text-sm font-medium">Condition</label>
+                    <Select name="condition" value={formData.condition} onValueChange={(value) => handleSelectChange("condition", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select condition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="excellent">Excellent</SelectItem>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="fair">Fair</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label htmlFor="category" className="text-sm font-medium">Category</label>
+                    <Select name="category" value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ncert">NCERT Books</SelectItem>
+                        <SelectItem value="reference">Reference Books</SelectItem>
+                        <SelectItem value="competitive">Competitive Exams</SelectItem>
+                        <SelectItem value="government">Government Exams</SelectItem>
+                        <SelectItem value="fiction">Fiction</SelectItem>
+                        <SelectItem value="nonfiction">Non-Fiction</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label htmlFor="description" className="text-sm font-medium">Description</label>
                     <Textarea
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Describe the book's condition, any markings, etc."
+                      placeholder="Describe the book's condition, any damage, etc."
                       rows={4}
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Book Images
-                    </label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
-                      <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Click to upload or drag and drop book images
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                      <Input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="mt-4 w-full"
-                      />
-                    </div>
-                    
-                    {/* Image Previews */}
-                    {imagePreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-4 mt-4">
-                        {imagePreviews.map((preview, index) => (
-                          <div key={index} className="aspect-square overflow-hidden rounded-md">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button type="submit" className="w-full md:w-auto">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Book to Store
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-        
-        {activeTab === "manage" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle>Manage Your Books</CardTitle>
-                    <CardDescription>
-                      View and manage your listed books
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        type="text"
-                        placeholder="Search books..."
-                        className="pl-10 w-48"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-muted-foreground" />
-                      <Select value={filterStatus} onValueChange={setFilterStatus}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="published">Published</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Book</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Condition</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Sales</TableHead>
-                        <TableHead>Revenue</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredBooks.map((book) => (
-                        <TableRow key={book.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{book.title}</div>
-                              <div className="text-sm text-muted-foreground">{book.author}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>₹{book.price}</TableCell>
-                          <TableCell>{book.condition}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={
-                                book.status === "Published" ? "default" : 
-                                book.status === "Pending" ? "secondary" : 
-                                "destructive"
-                              }
-                            >
-                              {book.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{book.sales}</TableCell>
-                          <TableCell>₹{book.revenue}</TableCell>
-                          <TableCell>{book.date}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Book Images</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                    <p className="mt-2">Drag and drop images here, or click to select files</p>
+                    <p className="text-sm text-gray-500">Upload clear photos of the book cover and condition</p>
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="mt-4"
+                    />
+                  </div>
+                  
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newPreviews = [...imagePreviews];
+                              newPreviews.splice(index, 1);
+                              setImagePreviews(newPreviews);
+                              
+                              const newFiles = [...bookImages];
+                              newFiles.splice(index, 1);
+                              setBookImages(newFiles);
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing {filteredBooks.length} of {sellerBooks.length} books
+
+                <Button type="submit" className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  List Book for Sale
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Manage Books */}
+        {activeTab === "manage" && (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <CardTitle>Manage Books</CardTitle>
+                  <CardDescription>View and manage your listed books</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline">Previous</Button>
-                  <Button variant="outline">Next</Button>
-                </div>
-              </CardFooter>
-            </Card>
-          </motion.div>
-        )}
-        
-        {activeTab === "analytics" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sales Overview</CardTitle>
-                  <CardDescription>
-                    Your sales performance over time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
-                    <p className="text-muted-foreground">Sales chart visualization would appear here</p>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search books..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
-                </CardContent>
-              </Card>
-              
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Book</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Condition</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date Listed</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBooks.filter(book => book.sellerEmail === user?.email).map((book) => (
+                    <TableRow key={book.id}>
+                      <TableCell className="font-medium">{book.title}</TableCell>
+                      <TableCell>{book.author}</TableCell>
+                      <TableCell>₹{book.price}</TableCell>
+                      <TableCell>{book.condition}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            book.status === "Published" ? "default" : 
+                            book.status === "Pending" ? "secondary" : 
+                            "destructive"
+                          }
+                        >
+                          {book.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{book.date}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredBooks.filter(book => book.sellerEmail === user?.email).length} of {sellerSpecificBooks.length} books
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline">Previous</Button>
+                <Button variant="outline">Next</Button>
+              </div>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Analytics */}
+        {activeTab === "analytics" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Sales Overview</CardTitle>
+                <CardDescription>Your sales performance over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80 flex items-center justify-center bg-gray-50 rounded-lg">
+                  <p className="text-muted-foreground">Sales chart visualization would appear here</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Top Performing Books</CardTitle>
-                  <CardDescription>
-                    Your best-selling titles
-                  </CardDescription>
+                  <CardTitle>Top Selling Books</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {sellerBooks
-                      .filter(book => book.sales > 0)
+                    {sellerSpecificBooks
                       .sort((a, b) => b.sales - a.sales)
                       .slice(0, 5)
                       .map((book, index) => (
                         <div key={book.id} className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">{book.title}</p>
-                            <p className="text-sm text-muted-foreground">{book.author}</p>
+                            <p className="font-medium text-sm">{book.title}</p>
+                            <p className="text-xs text-muted-foreground">{book.author}</p>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium">{book.sales} sales</p>
-                            <p className="text-sm text-muted-foreground">₹{book.revenue}</p>
-                          </div>
+                          <Badge variant="secondary">{book.sales} sales</Badge>
                         </div>
                       ))}
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="lg:col-span-2">
+              <Card>
                 <CardHeader>
-                  <CardTitle>Earnings Summary</CardTitle>
-                  <CardDescription>
-                    Your financial performance
-                  </CardDescription>
+                  <CardTitle>Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-primary/10 p-4 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Total Earnings</p>
-                      <p className="text-2xl font-bold">₹{sellerBooks.reduce((sum, book) => sum + book.revenue, 0)}</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <Book className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">New book listed</p>
+                        <p className="text-xs text-muted-foreground">2 hours ago</p>
+                      </div>
                     </div>
-                    <div className="bg-green-100 p-4 rounded-lg">
-                      <p className="text-sm text-muted-foreground">This Month</p>
-                      <p className="text-2xl font-bold">₹1,250</p>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <Package className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Book sold</p>
+                        <p className="text-xs text-muted-foreground">1 day ago</p>
+                      </div>
                     </div>
-                    <div className="bg-blue-100 p-4 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Avg. Per Book</p>
-                      <p className="text-2xl font-bold">₹249</p>
-                    </div>
-                    <div className="bg-purple-100 p-4 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Commission</p>
-                      <p className="text-2xl font-bold">₹125</p>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Payment received</p>
+                        <p className="text-xs text-muted-foreground">3 days ago</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

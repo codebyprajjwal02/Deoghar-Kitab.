@@ -110,6 +110,34 @@ interface ProfileData {
   email: string;
 }
 
+// Define the seller type for the global list
+interface SellerData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+}
+
+interface RegisteredSeller extends SellerData {
+  email: string;
+  status: string;
+  registeredDate: string;
+}
+
+// Define interfaces for better type safety
+interface ExportData {
+  books: AdminBook[];
+  users: User[];
+  orders: Order[];
+}
+
+interface PasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -173,6 +201,9 @@ const AdminDashboard = () => {
     { id: 1004, book: "Pride and Prejudice", buyer: "Daniel Green", seller: "Mike Johnson", amount: 199, status: "Completed", date: "2023-05-21" },
   ]);
 
+  // State for pending sellers
+  const [pendingSellers, setPendingSellers] = useState<RegisteredSeller[]>([]);
+
   const stats = [
     { title: "Total Books", value: "1,248", icon: Book, change: "+12%", trend: "up" },
     { title: "Total Users", value: "3,421", icon: Users, change: "+8%", trend: "up" },
@@ -213,6 +244,9 @@ const AdminDashboard = () => {
     
     // Load books from localStorage
     loadBooks();
+    
+    // Load pending sellers
+    loadPendingSellers();
   }, [navigate]);
 
   const loadBooks = () => {
@@ -231,6 +265,19 @@ const AdminDashboard = () => {
   useEffect(() => {
     localStorage.setItem("sellerBooks", JSON.stringify(books));
   }, [books]);
+
+  const loadPendingSellers = () => {
+    const sellersString = localStorage.getItem("all_sellers");
+    if (sellersString) {
+      try {
+        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
+        const pending = allSellers.filter(seller => seller.status === "pending");
+        setPendingSellers(pending);
+      } catch (error) {
+        console.error("Error parsing sellers:", error);
+      }
+    }
+  };
 
   const handleLogout = () => {
     // Remove user from localStorage
@@ -357,6 +404,52 @@ const AdminDashboard = () => {
     setShowPasswordModal(false);
   };
 
+  // Function to approve a seller
+  const approveSeller = (email: string) => {
+    const sellersString = localStorage.getItem("all_sellers");
+    if (sellersString) {
+      try {
+        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
+        const updatedSellers = allSellers.map(seller => 
+          seller.email === email ? { ...seller, status: "approved" } : seller
+        );
+        localStorage.setItem("all_sellers", JSON.stringify(updatedSellers));
+        loadPendingSellers(); // Refresh the list
+        
+        // Also update the user's role to "Seller" in the users list
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.email === email ? { ...user, role: "Seller" } : user
+          )
+        );
+        
+        alert("Seller approved successfully!");
+      } catch (error) {
+        console.error("Error updating seller status:", error);
+        alert("Error approving seller. Please try again.");
+      }
+    }
+  };
+
+  // Function to reject a seller
+  const rejectSeller = (email: string) => {
+    const sellersString = localStorage.getItem("all_sellers");
+    if (sellersString) {
+      try {
+        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
+        const updatedSellers = allSellers.map(seller => 
+          seller.email === email ? { ...seller, status: "rejected" } : seller
+        );
+        localStorage.setItem("all_sellers", JSON.stringify(updatedSellers));
+        loadPendingSellers(); // Refresh the list
+        alert("Seller rejected successfully!");
+      } catch (error) {
+        console.error("Error updating seller status:", error);
+        alert("Error rejecting seller. Please try again.");
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-muted/30">
       {/* Sidebar */}
@@ -391,6 +484,7 @@ const AdminDashboard = () => {
               { name: "Books", icon: Book, id: "books" },
               { name: "Users", icon: Users, id: "users" },
               { name: "Orders", icon: ShoppingCart, id: "orders" },
+              { name: "Sellers", icon: User, id: "sellers" },
               { name: "Database", icon: Database, id: "database" },
               { name: "System", icon: Server, id: "system" },
               { name: "Security", icon: Key, id: "security" },
@@ -551,13 +645,13 @@ const AdminDashboard = () => {
                         <Users className="w-6 h-6" />
                         <span>Manage Users</span>
                       </Button>
+                      <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setActiveTab("sellers")}>
+                        <User className="w-6 h-6" />
+                        <span>Manage Sellers</span>
+                      </Button>
                       <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setActiveTab("database")}>
                         <Database className="w-6 h-6" />
                         <span>Database</span>
-                      </Button>
-                      <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setActiveTab("system")}>
-                        <Server className="w-6 h-6" />
-                        <span>System</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -744,6 +838,78 @@ const AdminDashboard = () => {
                   <Button variant="outline">Next</Button>
                 </div>
               </CardFooter>
+            </Card>
+          )}
+
+          {activeTab === "sellers" && (
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <CardTitle>Seller Management</CardTitle>
+                    <CardDescription>Manage seller applications and approvals</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Sellers
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {pendingSellers.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Seller</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Registered Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingSellers.map((seller, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{seller.name}</TableCell>
+                          <TableCell>{seller.email}</TableCell>
+                          <TableCell>{seller.phone}</TableCell>
+                          <TableCell>{seller.location}</TableCell>
+                          <TableCell>{seller.registeredDate}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => approveSeller(seller.email)}
+                              >
+                                Approve
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => rejectSeller(seller.email)}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8">
+                    <User className="w-12 h-12 mx-auto text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium">No pending sellers</h3>
+                    <p className="mt-2 text-muted-foreground">
+                      All seller applications have been processed.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           )}
 
@@ -1550,7 +1716,5 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
-export default AdminDashboard;
 
 export default AdminDashboard;
