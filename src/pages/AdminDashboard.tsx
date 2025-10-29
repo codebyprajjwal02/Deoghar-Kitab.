@@ -61,6 +61,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+// Define the book type
+interface AdminBook {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  status: string;
+  seller: string;
+  date: string;
+  sales?: number;
+  revenue?: number;
+  sellerEmail?: string;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -69,14 +84,32 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [adminEmail, setAdminEmail] = useState("");
 
-  // Mock data for demonstration
-  const [books, setBooks] = useState([
-    { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", price: 299, condition: "Good", status: "Published", seller: "John Doe", date: "2023-05-15" },
-    { id: 2, title: "1984", author: "George Orwell", price: 249, condition: "Excellent", status: "Published", seller: "Sarah Smith", date: "2023-05-18" },
-    { id: 3, title: "Pride and Prejudice", author: "Jane Austen", price: 199, condition: "Fair", status: "Pending", seller: "Mike Johnson", date: "2023-05-20" },
-    { id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 349, condition: "Excellent", status: "Published", seller: "Emma Wilson", date: "2023-05-22" },
-    { id: 5, title: "Moby Dick", author: "Herman Melville", price: 279, condition: "Good", status: "Rejected", seller: "David Brown", date: "2023-05-25" },
-  ]);
+  // Load seller books from localStorage
+  const [books, setBooks] = useState<AdminBook[]>(() => {
+    const sellerBooksString = localStorage.getItem("sellerBooks");
+    if (sellerBooksString) {
+      try {
+        const sellerBooks: AdminBook[] = JSON.parse(sellerBooksString);
+        return sellerBooks;
+      } catch (error) {
+        console.error("Error parsing seller books:", error);
+        return [
+          { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", price: 299, condition: "Good", status: "Published", seller: "John Doe", date: "2023-05-15" },
+          { id: 2, title: "1984", author: "George Orwell", price: 249, condition: "Excellent", status: "Published", seller: "Sarah Smith", date: "2023-05-18" },
+          { id: 3, title: "Pride and Prejudice", author: "Jane Austen", price: 199, condition: "Fair", status: "Pending", seller: "Mike Johnson", date: "2023-05-20" },
+          { id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 349, condition: "Excellent", status: "Published", seller: "Emma Wilson", date: "2023-05-22" },
+          { id: 5, title: "Moby Dick", author: "Herman Melville", price: 279, condition: "Good", status: "Rejected", seller: "David Brown", date: "2023-05-25" },
+        ];
+      }
+    }
+    return [
+      { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", price: 299, condition: "Good", status: "Published", seller: "John Doe", date: "2023-05-15" },
+      { id: 2, title: "1984", author: "George Orwell", price: 249, condition: "Excellent", status: "Published", seller: "Sarah Smith", date: "2023-05-18" },
+      { id: 3, title: "Pride and Prejudice", author: "Jane Austen", price: 199, condition: "Fair", status: "Pending", seller: "Mike Johnson", date: "2023-05-20" },
+      { id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 349, condition: "Excellent", status: "Published", seller: "Emma Wilson", date: "2023-05-22" },
+      { id: 5, title: "Moby Dick", author: "Herman Melville", price: 279, condition: "Good", status: "Rejected", seller: "David Brown", date: "2023-05-25" },
+    ];
+  });
 
   const [users, setUsers] = useState([
     { id: 1, name: "John Doe", email: "john@example.com", role: "Buyer", status: "Active", joinDate: "2023-01-15", orders: 12 },
@@ -129,7 +162,27 @@ const AdminDashboard = () => {
       // Redirect to login if not logged in
       navigate("/admin/login");
     }
+    
+    // Load books from localStorage
+    loadBooks();
   }, [navigate]);
+
+  const loadBooks = () => {
+    const sellerBooksString = localStorage.getItem("sellerBooks");
+    if (sellerBooksString) {
+      try {
+        const sellerBooks = JSON.parse(sellerBooksString);
+        setBooks(sellerBooks);
+      } catch (error) {
+        console.error("Error parsing seller books:", error);
+      }
+    }
+  };
+
+  // Save books to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("sellerBooks", JSON.stringify(books));
+  }, [books]);
 
   const handleLogout = () => {
     // Remove user from localStorage

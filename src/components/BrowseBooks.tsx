@@ -14,7 +14,34 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
-const books = [
+// Define the book type
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  image: string;
+  sellerEmail?: string;
+  status?: string;
+}
+
+// Define the seller book type
+interface SellerBook {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  status: string;
+  date: string;
+  sales: number;
+  revenue: number;
+  sellerEmail: string;
+}
+
+// Initial hardcoded books
+const initialBooks: Book[] = [
   {
     id: 1,
     title: "NCERT Mathematics Class 10",
@@ -65,38 +92,71 @@ const books = [
   },
 ];
 
-// Define the wishlist item type
-interface WishlistItem {
-  id: number;
-  title: string;
-  author: string;
-  price: number;
-  image: string;
-  condition: string;
-}
-
-// Define the cart item type
-interface CartItem {
-  id: number;
-  title: string;
-  author: string;
-  price: number;
-  image: string;
-  condition: string;
-  quantity: number;
-}
-
 const BrowseBooks = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [books, setBooks] = useState<Book[]>(initialBooks);
 
   useEffect(() => {
     // Check if user is logged in
     const userString = localStorage.getItem("user");
     setIsLoggedIn(!!userString);
+    
+    // Load books from localStorage
+    loadBooks();
   }, []);
+
+  const loadBooks = () => {
+    // Get seller books from localStorage
+    const sellerBooksString = localStorage.getItem("sellerBooks");
+    if (sellerBooksString) {
+      try {
+        const sellerBooks: SellerBook[] = JSON.parse(sellerBooksString);
+        // Filter only published books
+        const publishedBooks = sellerBooks.filter((book: SellerBook) => book.status === "Published");
+        // Convert seller books to the format expected by BrowseBooks
+        const formattedSellerBooks: Book[] = publishedBooks.map((book: SellerBook) => ({
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          price: book.price,
+          condition: book.condition,
+          image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
+        }));
+        
+        // Combine initial books with published seller books
+        setBooks([...initialBooks, ...formattedSellerBooks]);
+      } catch (error) {
+        console.error("Error parsing seller books:", error);
+        setBooks(initialBooks);
+      }
+    } else {
+      setBooks(initialBooks);
+    }
+  };
+
+  // Define the wishlist item type
+  interface WishlistItem {
+    id: number;
+    title: string;
+    author: string;
+    price: number;
+    image: string;
+    condition: string;
+  }
+
+  // Define the cart item type
+  interface CartItem {
+    id: number;
+    title: string;
+    author: string;
+    price: number;
+    image: string;
+    condition: string;
+    quantity: number;
+  }
 
   const toggleFavorite = (id: number) => {
     if (!isLoggedIn) {
@@ -324,17 +384,6 @@ const BrowseBooks = () => {
               </div>
             </motion.div>
           ))}
-        </div>
-
-        {/* View More Button */}
-        <div className="text-center mt-12">
-          <Button 
-            onClick={() => navigate("/browse")}
-            size="lg"
-            className="px-8 py-6 text-lg hover:scale-105 transition-transform"
-          >
-            View More Books
-          </Button>
         </div>
       </div>
     </section>

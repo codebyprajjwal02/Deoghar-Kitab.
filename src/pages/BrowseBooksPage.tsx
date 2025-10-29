@@ -16,7 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import Footer from "@/components/Footer";
 
 // Sample book data - in a real app, this would come from an API
-const allBooks = [
+const initialBooks = [
   {
     id: 1,
     title: "NCERT Mathematics Class 10",
@@ -127,6 +127,32 @@ const allBooks = [
   },
 ];
 
+// Define the seller book type
+interface SellerBook {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  status: string;
+  date: string;
+  sales: number;
+  revenue: number;
+  sellerEmail: string;
+  category?: string;
+}
+
+// Define the book type for BrowseBooksPage
+interface BrowseBook {
+  id: number;
+  title: string;
+  author: string;
+  price: number;
+  condition: string;
+  image: string;
+  category: string;
+}
+
 // Define the wishlist item type
 interface WishlistItem {
   id: number;
@@ -158,6 +184,7 @@ const BrowseBooksPage = () => {
   const [conditionFilter, setConditionFilter] = useState("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [allBooks, setAllBooks] = useState<BrowseBook[]>(initialBooks);
 
   useEffect(() => {
     // Check if user is logged in
@@ -170,7 +197,40 @@ const BrowseBooksPage = () => {
       const wishlist: WishlistItem[] = JSON.parse(existingWishlist);
       setFavorites(wishlist.map(item => item.id));
     }
+    
+    // Load books from localStorage
+    loadBooks();
   }, []);
+
+  const loadBooks = () => {
+    // Get seller books from localStorage
+    const sellerBooksString = localStorage.getItem("sellerBooks");
+    if (sellerBooksString) {
+      try {
+        const sellerBooks: SellerBook[] = JSON.parse(sellerBooksString);
+        // Filter only published books
+        const publishedBooks = sellerBooks.filter((book: SellerBook) => book.status === "Published");
+        // Convert seller books to the format expected by BrowseBooksPage
+        const formattedSellerBooks = publishedBooks.map((book: SellerBook) => ({
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          price: book.price,
+          condition: book.condition,
+          image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
+          category: book.category || "reference", // Default category
+        }));
+        
+        // Combine initial books with published seller books
+        setAllBooks([...initialBooks, ...formattedSellerBooks]);
+      } catch (error) {
+        console.error("Error parsing seller books:", error);
+        setAllBooks(initialBooks);
+      }
+    } else {
+      setAllBooks(initialBooks);
+    }
+  };
 
   const toggleFavorite = (id: number) => {
     if (!isLoggedIn) {

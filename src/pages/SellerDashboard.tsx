@@ -56,42 +56,52 @@ const SellerDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [user, setUser] = useState<{email: string, userType: string} | null>(null);
 
-  // Mock data for seller's books
-  const [sellerBooks, setSellerBooks] = useState([
-    {
-      id: 1,
-      title: "To Kill a Mockingbird",
-      author: "Harper Lee",
-      price: 299,
-      condition: "Good",
-      status: "Published",
-      date: "2023-05-15",
-      sales: 5,
-      revenue: 1495,
-    },
-    {
-      id: 2,
-      title: "1984",
-      author: "George Orwell",
-      price: 249,
-      condition: "Excellent",
-      status: "Published",
-      date: "2023-05-18",
-      sales: 3,
-      revenue: 747,
-    },
-    {
-      id: 3,
-      title: "Pride and Prejudice",
-      author: "Jane Austen",
-      price: 199,
-      condition: "Fair",
-      status: "Pending",
-      date: "2023-05-20",
-      sales: 0,
-      revenue: 0,
-    },
-  ]);
+  // Load seller books from localStorage or use mock data
+  const [sellerBooks, setSellerBooks] = useState<any[]>(() => {
+    const savedBooks = localStorage.getItem("sellerBooks");
+    if (savedBooks) {
+      return JSON.parse(savedBooks);
+    }
+    // Mock data for initial state
+    return [
+      {
+        id: 1,
+        title: "To Kill a Mockingbird",
+        author: "Harper Lee",
+        price: 299,
+        condition: "Good",
+        status: "Published",
+        date: "2023-05-15",
+        sales: 5,
+        revenue: 1495,
+        sellerEmail: "example@example.com",
+      },
+      {
+        id: 2,
+        title: "1984",
+        author: "George Orwell",
+        price: 249,
+        condition: "Excellent",
+        status: "Published",
+        date: "2023-05-18",
+        sales: 3,
+        revenue: 747,
+        sellerEmail: "example@example.com",
+      },
+      {
+        id: 3,
+        title: "Pride and Prejudice",
+        author: "Jane Austen",
+        price: 199,
+        condition: "Fair",
+        status: "Pending",
+        date: "2023-05-20",
+        sales: 0,
+        revenue: 0,
+        sellerEmail: "example@example.com",
+      },
+    ];
+  });
 
   useEffect(() => {
     // Check if user is logged in
@@ -104,6 +114,11 @@ const SellerDashboard = () => {
       navigate("/");
     }
   }, [navigate]);
+
+  // Save seller books to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("sellerBooks", JSON.stringify(sellerBooks));
+  }, [sellerBooks]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -138,7 +153,7 @@ const SellerDashboard = () => {
     
     // Add new book to seller's books
     const newBook = {
-      id: sellerBooks.length + 1,
+      id: Date.now(), // Use timestamp for unique ID
       title: formData.title,
       author: formData.author,
       price: parseInt(formData.price),
@@ -147,9 +162,11 @@ const SellerDashboard = () => {
       date: new Date().toISOString().split('T')[0],
       sales: 0,
       revenue: 0,
+      sellerEmail: user?.email || "",
     };
     
-    setSellerBooks([...sellerBooks, newBook]);
+    const updatedBooks = [...sellerBooks, newBook];
+    setSellerBooks(updatedBooks);
     
     // Reset form
     setFormData({
