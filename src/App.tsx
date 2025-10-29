@@ -10,7 +10,7 @@ import AuthPage from "@/pages/AuthPage";
 import ForgotPassword from "@/pages/ForgotPassword";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
-import SellerDashboard from "@/pages/SellerDashboard";
+import SellerDashboardWrapper from "@/pages/SellerDashboardWrapper";
 import ProfilePage from "@/pages/ProfilePage";
 import BookDetails from "@/pages/BookDetails";
 import PaymentPage from "@/pages/PaymentPage";
@@ -36,7 +36,7 @@ const App = () => {
                 <Route path="/home" element={<Index />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/seller" element={<SellerDashboard />} />
+                <Route path="/seller" element={<SellerDashboardWrapper />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/book/:id" element={<BookDetails />} />
                 <Route path="/cart" element={<CartPage />} />
