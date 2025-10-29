@@ -385,6 +385,19 @@ const BrowseBooks = () => {
             </motion.div>
           ))}
         </div>
+        
+        {/* View More Books Button */}
+        <div className="text-center mt-12">
+          <a href="/browse">
+            <Button 
+              size="lg" 
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg font-medium rounded-full transition-all hover:scale-105"
+            >
+              {t.browse.viewMoreBooks}
+              <span className="ml-2">→</span>
+            </Button>
+          </a>
+        </div>
       </div>
     </section>
   );
