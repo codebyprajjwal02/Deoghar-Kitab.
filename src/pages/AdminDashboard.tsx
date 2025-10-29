@@ -76,6 +76,40 @@ interface AdminBook {
   sellerEmail?: string;
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  joinDate: string;
+  orders: number;
+}
+
+interface Order {
+  id: number;
+  book: string;
+  buyer: string;
+  seller: string;
+  amount: number;
+  status: string;
+  date: string;
+}
+
+interface UserData {
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  joinDate: string;
+  orders: number;
+}
+
+interface ProfileData {
+  name: string;
+  email: string;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -83,6 +117,19 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [adminEmail, setAdminEmail] = useState("");
+
+  // State for admin profile management
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "Admin User",
+    email: "",
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   // Load seller books from localStorage
   const [books, setBooks] = useState<AdminBook[]>(() => {
@@ -157,6 +204,7 @@ const AdminDashboard = () => {
         navigate("/");
       } else {
         setAdminEmail(userData.email);
+        setProfileData(prev => ({ ...prev, email: userData.email }));
       }
     } else {
       // Redirect to login if not logged in
@@ -211,9 +259,16 @@ const AdminDashboard = () => {
   });
 
   const updateBookStatus = (id: number, status: string) => {
-    setBooks(books.map(book => 
+    const updatedBooks = books.map(book => 
       book.id === id ? { ...book, status } : book
-    ));
+    );
+    setBooks(updatedBooks);
+    
+    // If book is published, also update it in the browse sections
+    if (status === "Published") {
+      // The browse sections already read from localStorage, so no additional action needed
+      // The book will automatically appear in browse sections
+    }
   };
 
   const deleteUser = (id: number) => {
@@ -233,6 +288,73 @@ const AdminDashboard = () => {
 
   const handleSecurityScan = () => {
     alert("Security scan initiated. Results will be available in the security logs.");
+  };
+
+  // Function to export data as JSON
+  const exportData = (dataType: string) => {
+    let dataToExport: AdminBook[] | User[] | Order[] = [];
+    let filename = "";
+    
+    switch (dataType) {
+      case 'books':
+        dataToExport = books;
+        filename = "books-export.json";
+        break;
+      case 'users':
+        dataToExport = users;
+        filename = "users-export.json";
+        break;
+      case 'orders':
+        dataToExport = orders;
+        filename = "orders-export.json";
+        break;
+      default:
+        alert("Invalid data type");
+        return;
+    }
+    
+    // Create JSON string
+    const jsonStr = JSON.stringify(dataToExport, null, 2);
+    
+    // Create blob and download
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
+
+  // Function to add a new user
+  const addUser = (userData: UserData) => {
+    const newUser = {
+      id: users.length + 1,
+      ...userData
+    };
+    setUsers([...users, newUser]);
+  };
+
+  // Function to update admin profile
+  const updateAdminProfile = (profileData: ProfileData) => {
+    setAdminEmail(profileData.email);
+    // In a real app, you would update the user data in localStorage or backend
+    alert("Profile updated successfully!");
+    setShowProfileModal(false);
+  };
+
+  // Function to change admin password
+  const changeAdminPassword = (newPassword: string) => {
+    // In a real app, you would hash the password and update it in the backend
+    alert("Password changed successfully!");
+    setShowPasswordModal(false);
   };
 
   return (
@@ -511,11 +633,20 @@ const AdminDashboard = () => {
                             <Button variant="outline" size="sm">
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4" />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => updateBookStatus(book.id, book.status === "Published" ? "Pending" : "Published")}
+                            >
+                              {book.status === "Published" ? "Unpublish" : "Publish"}
                             </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="w-4 h-4" />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => updateBookStatus(book.id, "Rejected")}
+                              disabled={book.status === "Rejected"}
+                            >
+                              Reject
                             </Button>
                           </div>
                         </TableCell>
@@ -790,10 +921,70 @@ const AdminDashboard = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
-                    <Button variant="destructive" className="h-20 flex flex-col gap-2">
-                      <AlertTriangle className="w-6 h-6" />
-                      <span>Clear Data</span>
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="destructive" className="h-20 flex flex-col gap-2">
+                          <AlertTriangle className="w-6 h-6" />
+                          <span>Clear Data</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Clear Database</DialogTitle>
+                          <DialogDescription>
+                            This will permanently delete selected data from your database. This action cannot be undone.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Select data to delete:</label>
+                            <div className="space-y-2">
+                              <div className="flex items-center">
+                                <input type="checkbox" id="old-orders" className="mr-2" />
+                                <label htmlFor="old-orders">Orders older than 6 months</label>
+                              </div>
+                              <div className="flex items-center">
+                                <input type="checkbox" id="old-users" className="mr-2" />
+                                <label htmlFor="old-users">Inactive users (no activity for 1 year)</label>
+                              </div>
+                              <div className="flex items-center">
+                                <input type="checkbox" id="old-logs" className="mr-2" />
+                                <label htmlFor="old-logs">System logs older than 30 days</label>
+                              </div>
+                              <div className="flex items-center">
+                                <input type="checkbox" id="all-data" className="mr-2" />
+                                <label htmlFor="all-data">All data (complete reset)</label>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="confirm-delete" />
+                            <label htmlFor="confirm-delete" className="text-sm font-medium">
+                              I understand this action cannot be undone
+                            </label>
+                          </div>
+                          <Button variant="destructive" className="w-full">Delete Selected Data</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-medium mb-4">Data Export</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Button variant="outline" className="h-16 flex flex-col gap-1" onClick={() => exportData('books')}>
+                        <Book className="w-5 h-5" />
+                        <span>Export Books</span>
+                      </Button>
+                      <Button variant="outline" className="h-16 flex flex-col gap-1" onClick={() => exportData('users')}>
+                        <User className="w-5 h-5" />
+                        <span>Export Users</span>
+                      </Button>
+                      <Button variant="outline" className="h-16 flex flex-col gap-1" onClick={() => exportData('orders')}>
+                        <ShoppingCart className="w-5 h-5" />
+                        <span>Export Orders</span>
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1073,6 +1264,27 @@ const AdminDashboard = () => {
                       <span>User Sessions</span>
                     </Button>
                   </div>
+                  
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-medium mb-4">Admin Profile Management</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button 
+                        className="h-16 flex flex-col gap-1"
+                        onClick={() => setShowProfileModal(true)}
+                      >
+                        <User className="w-5 h-5" />
+                        <span>Update Profile</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex flex-col gap-1"
+                        onClick={() => setShowPasswordModal(true)}
+                      >
+                        <Key className="w-5 h-5" />
+                        <span>Change Password</span>
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               
@@ -1264,8 +1476,81 @@ const AdminDashboard = () => {
           )}
         </main>
       </div>
+      
+      {/* Profile Update Modal */}
+      <>
+        <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Admin Profile</DialogTitle>
+              <DialogDescription>
+                Update your admin profile information
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Name</label>
+                <Input 
+                  value={profileData.name} 
+                  onChange={(e) => setProfileData({...profileData, name: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input 
+                  type="email" 
+                  value={profileData.email} 
+                  onChange={(e) => setProfileData({...profileData, email: e.target.value})} 
+                />
+              </div>
+              <Button onClick={() => updateAdminProfile(profileData)}>Update Profile</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Password Change Modal */}
+        <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change Admin Password</DialogTitle>
+              <DialogDescription>
+                Update your admin account password
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Current Password</label>
+                <Input 
+                  type="password" 
+                  value={passwordData.currentPassword} 
+                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">New Password</label>
+                <Input 
+                  type="password" 
+                  value={passwordData.newPassword} 
+                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Confirm New Password</label>
+                <Input 
+                  type="password" 
+                  value={passwordData.confirmPassword} 
+                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})} 
+                />
+              </div>
+              <Button onClick={() => changeAdminPassword(passwordData.newPassword)}>Change Password</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     </div>
   );
 };
+
+export default AdminDashboard;
 
 export default AdminDashboard;
