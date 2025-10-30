@@ -1,4 +1,6 @@
 // Middleware index file
+const errorHandler = require('./errorHandler');
+
 module.exports = {
-  // Middleware exports will be added here
+  errorHandler
 };

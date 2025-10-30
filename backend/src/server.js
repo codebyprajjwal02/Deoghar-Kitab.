@@ -2,9 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const routes = require('./routes');
+const connectDB = require('./config/db');
+const { errorHandler } = require('./middleware');
 
 // Load environment variables
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Changed from 3000 to 3001
@@ -32,6 +37,9 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Error handler middleware (should be last)
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {

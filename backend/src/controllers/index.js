@@ -1,4 +1,6 @@
 // Controllers index file
+const userController = require('./userController');
+
 module.exports = {
-  // Controller exports will be added here
+  userController
 };

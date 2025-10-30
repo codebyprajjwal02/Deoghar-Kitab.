@@ -1,4 +1,6 @@
 // Models index file
+const User = require('./User');
+
 module.exports = {
-  // Model exports will be added here
+  User
 };
