@@ -5,6 +5,7 @@ import { Eye, EyeOff, BookOpen, User, Lock, Mail, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 const AnimatedAuth = () => {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ const AnimatedAuth = () => {
     password: "",
     confirmPassword: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
 
   // Handle character animation sequence
   useEffect(() => {
@@ -51,17 +54,33 @@ const AnimatedAuth = () => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted:", loginData);
-    // Navigate to home after login
-    navigate("/home");
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // Handle login logic here
+      console.log("Login submitted:", loginData);
+      // Navigate to home after login will happen in the LoadingAnimation component
+    }, 1500);
   };
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log("Signup submitted:", { ...signupData, userType });
-    // Navigate to home after signup
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // Handle signup logic here
+      console.log("Signup submitted:", { ...signupData, userType });
+      // Navigate to home after signup will happen in the LoadingAnimation component
+    }, 1500);
+  };
+
+  const handleLoadingComplete = () => {
     navigate("/home");
   };
 
@@ -72,6 +91,10 @@ const AnimatedAuth = () => {
   const kickToLogin = () => {
     setCurrentView("login");
   };
+
+  if (showLoading) {
+    return <LoadingAnimation onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 overflow-hidden relative">
@@ -181,9 +204,7 @@ const AnimatedAuth = () => {
                   animate={{ x: "100%" }}
                   transition={{ duration: 0.5 }}
                   onAnimationComplete={() => {
-                    if (currentView === "signup") {
-                      // Reset animation when going back to login
-                    }
+                    // Reset animation when going back to login
                   }}
                 />
               )}
@@ -257,8 +278,15 @@ const AnimatedAuth = () => {
                     </a>
                   </div>
                   
-                  <Button type="submit" className="w-full">
-                    Sign In
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Signing In...
+                      </div>
+                    ) : (
+                      "Sign In"
+                    )}
                   </Button>
                 </form>
               </CardContent>
@@ -416,8 +444,15 @@ const AnimatedAuth = () => {
                     </label>
                   </div>
                   
-                  <Button type="submit" className="w-full">
-                    Create Account
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Creating Account...
+                      </div>
+                    ) : (
+                      "Create Account"
+                    )}
                   </Button>
                 </form>
               </CardContent>

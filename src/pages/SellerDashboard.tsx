@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { 
   BookOpen, 
   Plus, 
-  Book, 
+  Book,  
   User, 
   Package,
   DollarSign,

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { BookOpen, User, Lock, Mail, Shield, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Mail, Lock, Eye, EyeOff, User, BookOpen, Shield } from "lucide-react";
+import { motion } from "framer-motion";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 // Define user type
 interface RegisteredUser {
@@ -31,6 +32,8 @@ const AuthPage = () => {
   });
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
 
   // Check if user credentials are stored in localStorage
   useEffect(() => {
@@ -74,97 +77,129 @@ const AuthPage = () => {
       return;
     }
     
-    // Get registered users from localStorage
-    const registeredUsersString = localStorage.getItem("registeredUsers");
-    const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
     
-    // Find user by email
-    const user = registeredUsers.find((u: RegisteredUser) => u.email === loginData.email);
-    
-    // Check if user exists
-    if (!user) {
-      setError("No account found with this email. Please sign up first.");
-      return;
-    }
-    
-    // Check password
-    if (user.password !== loginData.password) {
-      setError("Incorrect password. Please try again.");
-      return;
-    }
-    
-    // Clear any previous errors
-    setError("");
-    
-    // Store current user in localStorage to indicate they're logged in
-    localStorage.setItem("user", JSON.stringify({
-      name: user.name,
-      email: user.email,
-      userType: userType
-    }));
-    
-    // Save credentials if "Remember Me" is checked
-    if (rememberMe) {
-      localStorage.setItem("rememberedEmail", loginData.email);
-      localStorage.setItem("rememberedPassword", loginData.password);
-    } else {
-      localStorage.removeItem("rememberedEmail");
-      localStorage.removeItem("rememberedPassword");
-    }
-    
-    // Navigate to home after login
-    navigate("/home");
+    // Simulate API call delay
+    setTimeout(() => {
+      // Get registered users from localStorage
+      const registeredUsersString = localStorage.getItem("registeredUsers");
+      const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+      
+      // Find user by email
+      const user = registeredUsers.find((u: RegisteredUser) => u.email === loginData.email);
+      
+      // Check if user exists
+      if (!user) {
+        setError("No account found with this email. Please sign up first.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Check password
+      if (user.password !== loginData.password) {
+        setError("Incorrect password. Please try again.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Clear any previous errors
+      setError("");
+      
+      // Store current user in localStorage to indicate they're logged in
+      localStorage.setItem("user", JSON.stringify({
+        name: user.name,
+        email: user.email,
+        userType: userType
+      }));
+      
+      // Save credentials if "Remember Me" is checked
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", loginData.email);
+        localStorage.setItem("rememberedPassword", loginData.password);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+        localStorage.removeItem("rememberedPassword");
+      }
+      
+      // Navigate to home after login
+      // The actual navigation will happen in the LoadingAnimation component
+    }, 1500);
   };
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password confirmation
-    if (signupData.password !== signupData.confirmPassword) {
-      setError("Passwords do not match. Please try again.");
-      return;
-    }
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
     
-    // Validate password length
-    if (signupData.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
-    }
-    
-    // Get registered users from localStorage
-    const registeredUsersString = localStorage.getItem("registeredUsers");
-    const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
-    
-    // Check if user with this email already exists
-    const existingUser = registeredUsers.find((u: RegisteredUser) => u.email === signupData.email);
-    if (existingUser) {
-      setError("An account with this email already exists. Please sign in instead.");
-      return;
-    }
-    
-    // Clear any previous errors
-    setError("");
-    
-    // Add new user to registered users
-    const newUser: RegisteredUser = {
-      name: signupData.name,
-      email: signupData.email,
-      password: signupData.password,
-    };
-    
-    const updatedUsers = [...registeredUsers, newUser];
-    localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
-    
-    // Store current user in localStorage to indicate they're logged in
-    localStorage.setItem("user", JSON.stringify({
-      name: signupData.name,
-      email: signupData.email,
-      userType: "user"
-    }));
-    
-    // Navigate to home after signup
+    // Simulate API call delay
+    setTimeout(() => {
+      // Validate password confirmation
+      if (signupData.password !== signupData.confirmPassword) {
+        setError("Passwords do not match. Please try again.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Validate password length
+      if (signupData.password.length < 6) {
+        setError("Password must be at least 6 characters long.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Get registered users from localStorage
+      const registeredUsersString = localStorage.getItem("registeredUsers");
+      const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+      
+      // Check if user with this email already exists
+      const existingUser = registeredUsers.find((u: RegisteredUser) => u.email === signupData.email);
+      if (existingUser) {
+        setError("An account with this email already exists. Please sign in instead.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Clear any previous errors
+      setError("");
+      
+      // Add new user to registered users
+      const newUser: RegisteredUser = {
+        name: signupData.name,
+        email: signupData.email,
+        password: signupData.password,
+      };
+      
+      const updatedUsers = [...registeredUsers, newUser];
+      localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
+      
+      // Store current user in localStorage to indicate they're logged in
+      localStorage.setItem("user", JSON.stringify({
+        name: signupData.name,
+        email: signupData.email,
+        userType: "user"
+      }));
+      
+      // Navigate to home after signup
+      // The actual navigation will happen in the LoadingAnimation component
+    }, 1500);
+  };
+
+  const handleLoadingComplete = () => {
     navigate("/home");
   };
+
+  if (showLoading) {
+    return <LoadingAnimation onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -303,8 +338,16 @@ const AuthPage = () => {
                 <Button 
                   type="submit" 
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+                  disabled={isLoading}
                 >
-                  Sign In as {userType === "admin" ? "Admin" : "User"}
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Signing In...
+                    </div>
+                  ) : (
+                    `Sign In as ${userType === "admin" ? "Admin" : "User"}`
+                  )}
                 </Button>
                 
                 {userType === "admin" && (
@@ -413,8 +456,16 @@ const AuthPage = () => {
                 <Button 
                   type="submit" 
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+                  disabled={isLoading}
                 >
-                  Create Account
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Creating Account...
+                    </div>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </form>
             )}

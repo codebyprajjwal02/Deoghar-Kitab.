@@ -5,6 +5,7 @@ import { Shield, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const AdminLogin = () => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
 
   // Hardcoded admin credentials for exclusive access
   const ADMIN_CREDENTIALS = {
@@ -32,20 +35,36 @@ const AdminLogin = () => {
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate admin credentials
-    if (loginData.email === ADMIN_CREDENTIALS.email && loginData.password === ADMIN_CREDENTIALS.password) {
-      // Store user in localStorage to indicate they're logged in as admin
-      localStorage.setItem("user", JSON.stringify({
-        email: loginData.email,
-        userType: "admin"
-      }));
-      
-      // Navigate to admin dashboard
-      navigate("/admin");
-    } else {
-      setError("Invalid admin credentials. Access restricted to authorized personnel only.");
-    }
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // Validate admin credentials
+      if (loginData.email === ADMIN_CREDENTIALS.email && loginData.password === ADMIN_CREDENTIALS.password) {
+        // Store user in localStorage to indicate they're logged in as admin
+        localStorage.setItem("user", JSON.stringify({
+          email: loginData.email,
+          userType: "admin"
+        }));
+        
+        // Navigate to admin dashboard will happen in the LoadingAnimation component
+      } else {
+        setError("Invalid admin credentials. Access restricted to authorized personnel only.");
+        setIsLoading(false);
+        setShowLoading(false);
+      }
+    }, 1500);
   };
+
+  const handleLoadingComplete = () => {
+    navigate("/admin");
+  };
+
+  if (showLoading) {
+    return <LoadingAnimation onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-indigo-900 p-4">
@@ -119,8 +138,16 @@ const AdminLogin = () => {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+                disabled={isLoading}
               >
-                Access Admin Panel
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Authenticating...
+                  </div>
+                ) : (
+                  "Access Admin Panel"
+                )}
               </Button>
               
               <div className="text-xs text-center text-gray-500 mt-4">

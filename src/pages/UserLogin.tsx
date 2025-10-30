@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, BookOpen, User, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { User, Lock, Eye, EyeOff, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -15,6 +17,8 @@ const UserLogin = () => {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,11 +30,26 @@ const UserLogin = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("User login submitted:", formData);
-    // Navigate to home after login
+    // Show loading animation
+    setIsLoading(true);
+    setShowLoading(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // Handle login logic here
+      console.log("User login submitted:", formData);
+      // Navigate to home after login
+      // The actual navigation will happen in the LoadingAnimation component
+    }, 1500);
+  };
+
+  const handleLoadingComplete = () => {
     navigate("/");
   };
+
+  if (showLoading) {
+    return <LoadingAnimation onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -110,8 +129,15 @@ const UserLogin = () => {
                 </Link>
               </div>
               
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing In...
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </CardContent>

@@ -7,21 +7,38 @@ import SellSection from "@/components/SellSection";
 import WhyChoose from "@/components/WhyChoose";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
-    const userString = localStorage.getItem("user");
-    if (userString) {
-      const userData = JSON.parse(userString);
-      setIsLoggedIn(true);
-      setUser(userData);
-    }
+    // Simulate loading time for the page
+    const timer = setTimeout(() => {
+      // Check if user is logged in
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        const userData = JSON.parse(userString);
+        setIsLoggedIn(true);
+        setUser(userData);
+      }
+      setIsLoading(false);
+    }, 1000); // 1 second loading time
+
+    return () => clearTimeout(timer);
   }, []);
+
+  const handleLoadingComplete = () => {
+    // This is just a placeholder since we're already on the page
+    console.log("Loading complete");
+  };
+
+  if (isLoading) {
+    return <LoadingAnimation onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen">
