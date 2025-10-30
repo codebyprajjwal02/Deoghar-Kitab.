@@ -1,73 +1,140 @@
-# Welcome to your Lovable project
+# Deoghar Kitab
 
-## Project info
+A book marketplace for students of classes 1-12, competitive exams, and government exams.
 
-**URL**: https://lovable.dev/projects/02f6e7c5-9f9d-43ff-9bfd-3150584e15e5
+## Project Structure
 
-## How can I edit this code?
+```
+deoghar-kitab-reads/
+├── frontend/          # React frontend application
+├── backend/           # Node.js/Express backend server
+├── package.json       # Root package.json for managing both frontend and backend
+└── README.md          # This file
+```
 
-There are several ways of editing your application.
+## Technologies Used
 
-**Use Lovable**
+### Frontend
+- React with TypeScript
+- Vite as build tool
+- Tailwind CSS for styling
+- React Router for navigation
+- Shadcn UI components
+- Framer Motion for animations
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/02f6e7c5-9f9d-43ff-9bfd-3150584e15e5) and start prompting.
+### Backend
+- Node.js
+- Express.js
+- MongoDB (planned)
+- JWT for authentication (planned)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v14 or higher)
+- npm or yarn
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd deoghar-kitab-reads
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies for all parts of the project:
+   ```bash
+   npm run install:all
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Running the Application
 
-# Step 3: Install the necessary dependencies.
-npm i
+#### Development Mode
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+To run both frontend and backend in development mode simultaneously:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+To run only the frontend:
+```bash
+npm run dev:frontend
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+To run only the backend:
+```bash
+npm run dev:backend
+```
 
-**Use GitHub Codespaces**
+#### Production Mode
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+To build the frontend:
+```bash
+npm run build:frontend
+```
 
-## What technologies are used for this project?
+To start the frontend in preview mode:
+```bash
+npm run start:frontend
+```
 
-This project is built with:
+To start the backend:
+```bash
+npm run start:backend
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Project Structure Details
 
-## How can I deploy this project?
+### Frontend
+```
+frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/          # Page components
+│   ├── contexts/       # React contexts
+│   ├── hooks/          # Custom hooks
+│   ├── lib/            # Utility functions
+│   ├── App.tsx         # Main application component
+│   └── main.tsx        # Entry point
+├── public/             # Static assets
+├── index.html          # HTML template
+├── package.json        # Frontend dependencies and scripts
+├── tsconfig.json       # TypeScript configuration
+├── vite.config.ts      # Vite configuration
+└── README.md           # Frontend documentation
+```
 
-Simply open [Lovable](https://lovable.dev/projects/02f6e7c5-9f9d-43ff-9bfd-3150584e15e5) and click on Share -> Publish.
+### Backend
+```
+backend/
+├── src/
+│   ├── controllers/    # Request handlers
+│   ├── models/         # Data models
+│   ├── routes/         # API routes
+│   ├── middleware/     # Custom middleware
+│   ├── config/         # Configuration files
+│   └── server.js       # Main server file
+├── package.json        # Backend dependencies and scripts
+└── README.md           # Backend documentation
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Deployment
 
-Yes, you can!
+This project is configured for deployment on Vercel for the frontend. Backend deployment options will be determined based on requirements.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+
+For any queries, please contact the development team.
