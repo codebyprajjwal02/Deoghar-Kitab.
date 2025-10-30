@@ -103,7 +103,7 @@ const WishlistPage = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any books to your wishlist yet.
               </p>
-              <Button onClick={() => navigate("/home")}>
+              <Button onClick={() => navigate("/browse")}>
                 Browse Books
               </Button>
             </CardContent>
@@ -119,7 +119,7 @@ const WishlistPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/browse")}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Browse

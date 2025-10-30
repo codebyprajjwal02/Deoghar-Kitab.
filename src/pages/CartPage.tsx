@@ -90,7 +90,7 @@ const CartPage = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any books to your cart yet.
               </p>
-              <Button onClick={() => navigate("/home")}>
+              <Button onClick={() => navigate("/browse")}>
                 Browse Books
               </Button>
             </CardContent>
@@ -106,7 +106,7 @@ const CartPage = () => {
         <Button 
           variant="outline" 
           className="mb-6 flex items-center gap-2"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/browse")}
         >
           <ArrowLeft className="w-4 h-4" />
           Continue Shopping
