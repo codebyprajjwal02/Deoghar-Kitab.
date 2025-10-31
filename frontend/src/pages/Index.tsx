@@ -8,11 +8,12 @@ import WhyChoose from "@/components/WhyChoose";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import UserGreeting from "@/components/UserGreeting";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const [user, setUser] = useState<{name: string, email: string, userType: string} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,11 +46,18 @@ const Index = () => {
       <Navbar />
       <Hero />
       
+      {/* Show personalized greeting for logged-in users */}
+      {isLoggedIn && user?.name && (
+        <UserGreeting name={user.name} />
+      )}
+      
       {/* Show personalized content for logged-in users */}
       {isLoggedIn && (
         <div className="container mx-auto px-4 py-8">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <h2 className="text-xl font-semibold text-blue-800">Welcome back, {user?.email}!</h2>
+            <h2 className="text-xl font-semibold text-blue-800">
+              {user?.name ? `Welcome back, ${user.name}!` : `Welcome back, ${user?.email}!`}
+            </h2>
             <p className="text-blue-600">
               {user?.userType === "admin" 
                 ? "You're logged in as an administrator. Access the admin dashboard to manage the platform." 

@@ -9,6 +9,13 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
+// Define user type
+interface RegisteredUser {
+  name: string;
+  email: string;
+  password: string;
+}
+
 const UserLogin = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -19,6 +26,7 @@ const UserLogin = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,6 +34,8 @@ const UserLogin = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,8 +46,39 @@ const UserLogin = () => {
     
     // Simulate API call delay
     setTimeout(() => {
-      // Handle login logic here
-      console.log("User login submitted:", formData);
+      // Get registered users from localStorage
+      const registeredUsersString = localStorage.getItem("registeredUsers");
+      const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+      
+      // Find user by email
+      const user = registeredUsers.find((u: RegisteredUser) => u.email === formData.email);
+      
+      // Check if user exists
+      if (!user) {
+        setError("No account found with this email. Please sign up first.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Check password
+      if (user.password !== formData.password) {
+        setError("Incorrect password. Please try again.");
+        setIsLoading(false);
+        setShowLoading(false);
+        return;
+      }
+      
+      // Clear any previous errors
+      setError("");
+      
+      // Store current user in localStorage to indicate they're logged in
+      localStorage.setItem("user", JSON.stringify({
+        name: user.name,
+        email: user.email,
+        userType: "user"
+      }));
+      
       // Navigate to home after login
       // The actual navigation will happen in the LoadingAnimation component
     }, 1500);
@@ -71,6 +112,13 @@ const UserLogin = () => {
           </CardHeader>
           
           <CardContent>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">Email</label>
