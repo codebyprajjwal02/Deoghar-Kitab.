@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroImage from "@/assets/hero-books.jpg";
@@ -10,6 +10,17 @@ const Hero = () => {
   const scrollToNext = () => {
     const browseSection = document.getElementById("browse");
     browseSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Function to create a test user for development
+  const createTestUser = () => {
+    const testUser = {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      userType: "user"
+    };
+    localStorage.setItem("user", JSON.stringify(testUser));
+    window.location.reload();
   };
 
   return (
@@ -83,6 +94,20 @@ const Hero = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Development Test Button */}
+      {import.meta.env.DEV && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          onClick={createTestUser}
+          className="absolute top-4 right-4 z-20 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors"
+          title="Create Test User"
+        >
+          <User className="w-5 h-5" />
+        </motion.button>
+      )}
 
       {/* Scroll Indicator */}
       <motion.button

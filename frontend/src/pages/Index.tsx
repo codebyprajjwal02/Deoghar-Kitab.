@@ -25,6 +25,20 @@ const Index = () => {
         const userData = JSON.parse(userString);
         setIsLoggedIn(true);
         setUser(userData);
+      } 
+      // For development/testing purposes, create a test user if none exists
+      else if (import.meta.env.DEV) {
+        // Uncomment the following lines to create a test user during development
+        /*
+        const testUser = {
+          name: "John Doe",
+          email: "john.doe@example.com",
+          userType: "user"
+        };
+        localStorage.setItem("user", JSON.stringify(testUser));
+        setIsLoggedIn(true);
+        setUser(testUser);
+        */
       }
       setIsLoading(false);
     }, 1000); // 1 second loading time
