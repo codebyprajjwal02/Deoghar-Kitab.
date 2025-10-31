@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroImage from "@/assets/hero-books.jpg";
 
+// Hero component for the homepage
 const Hero = () => {
   const { t } = useLanguage();
 
