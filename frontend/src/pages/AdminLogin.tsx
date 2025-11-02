@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Lock, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -62,6 +62,10 @@ const AdminLogin = () => {
     navigate("/admin");
   };
 
+  const handleBackToLogin = () => {
+    navigate("/");
+  };
+
   if (showLoading) {
     return <LoadingAnimation onComplete={handleLoadingComplete} />;
   }
@@ -74,6 +78,16 @@ const AdminLogin = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10"
       >
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={handleBackToLogin}
+            className="text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to User Login
+          </Button>
+        </div>
         <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-lg">
           <CardHeader className="text-center pb-6">
             <div className="flex justify-center mb-4">
