@@ -10,7 +10,8 @@ import {
   Shield, 
   Truck, 
   RotateCcw,
-  ArrowLeft
+  ArrowLeft,
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,9 +34,20 @@ interface Book {
   publishedDate: string;
   isbn: string;
   seller: string;
+  sellerEmail: string; // Added seller email to link to seller data
   rating: number;
   reviews: number;
   inStock: boolean;
+}
+
+// Define seller data type
+interface SellerData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  showPhone: boolean;
 }
 
 // Mock book data - in a real app this would come from an API
@@ -55,6 +67,7 @@ const mockBooks: Book[] = [
     publishedDate: "1960",
     isbn: "978-0-06-112008-4",
     seller: "John Doe",
+    sellerEmail: "john@example.com", // Added seller email
     rating: 4.8,
     reviews: 124,
     inStock: true,
@@ -74,6 +87,7 @@ const mockBooks: Book[] = [
     publishedDate: "1949",
     isbn: "978-0-452-28423-4",
     seller: "Sarah Smith",
+    sellerEmail: "sarah@example.com", // Added seller email
     rating: 4.9,
     reviews: 256,
     inStock: true,
@@ -93,6 +107,7 @@ const mockBooks: Book[] = [
     publishedDate: "1813",
     isbn: "978-0-14-143951-8",
     seller: "Mike Johnson",
+    sellerEmail: "mike@example.com", // Added seller email
     rating: 4.7,
     reviews: 189,
     inStock: true,
@@ -118,12 +133,19 @@ const BookDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [sellerData, setSellerData] = useState<SellerData | null>(null); // Added seller data state
 
   useEffect(() => {
     // Find the book by ID
     const foundBook = mockBooks.find(b => b.id === parseInt(id || "1"));
     if (foundBook) {
       setBook(foundBook);
+      
+      // Load seller data based on seller email
+      const sellerDataString = localStorage.getItem(`seller_${foundBook.sellerEmail}`);
+      if (sellerDataString) {
+        setSellerData(JSON.parse(sellerDataString));
+      }
     } else {
       // If book not found, redirect to home
       navigate("/home");
@@ -176,6 +198,12 @@ const BookDetails = () => {
     
     // Navigate to cart page
     navigate("/cart");
+  };
+
+  const handleCallSeller = () => {
+    if (sellerData && sellerData.phone) {
+      window.location.href = `tel:${sellerData.phone}`;
+    }
   };
 
   const incrementQuantity = () => {
@@ -300,6 +328,31 @@ const BookDetails = () => {
               </div>
               <span className="font-semibold">₹{book.price * quantity}</span>
             </div>
+
+            {/* Seller Contact Information */}
+            {sellerData && sellerData.showPhone && (
+              <Card className="border-primary">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Contact Seller</p>
+                        <p className="text-sm text-muted-foreground">
+                          {sellerData.phone}
+                        </p>
+                      </div>
+                    </div>
+                    <Button onClick={handleCallSeller} className="flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Call Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>

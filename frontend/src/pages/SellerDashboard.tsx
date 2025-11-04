@@ -14,7 +14,10 @@ import {
   Trash2,
   Upload,
   Search,
-  Filter
+  Filter,
+  Phone,
+  ToggleLeft,
+  ToggleRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +40,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Define interfaces for better type safety
 interface SellerData {
@@ -45,6 +50,7 @@ interface SellerData {
   phone: string;
   location: string;
   bio: string;
+  showPhone: boolean; // New field for phone visibility
 }
 
 interface SellerBook {
@@ -65,7 +71,7 @@ interface SellerBook {
 const SellerDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<"add" | "manage" | "analytics">("add");
+  const [activeTab, setActiveTab] = useState<"add" | "manage" | "analytics" | "profile">("add");
   const [formData, setFormData] = useState({
     title: "",
     author: "",
@@ -138,7 +144,12 @@ const SellerDashboard = () => {
       // Load seller data
       const sellerDataString = localStorage.getItem(`seller_${userData.email}`);
       if (sellerDataString) {
-        setSellerData(JSON.parse(sellerDataString));
+        const parsedSellerData = JSON.parse(sellerDataString);
+        // Ensure showPhone field exists (for backward compatibility)
+        if (parsedSellerData.showPhone === undefined) {
+          parsedSellerData.showPhone = false;
+        }
+        setSellerData(parsedSellerData);
       }
     } else {
       // Redirect to login if not logged in
@@ -215,6 +226,17 @@ const SellerDashboard = () => {
     
     // Show success message
     alert("Book added successfully! It will be reviewed and published shortly.");
+  };
+
+  const handlePhoneVisibilityChange = (checked: boolean) => {
+    if (sellerData) {
+      const updatedSellerData = {
+        ...sellerData,
+        showPhone: checked
+      };
+      setSellerData(updatedSellerData);
+      localStorage.setItem(`seller_${sellerData.email}`, JSON.stringify(updatedSellerData));
+    }
   };
 
   const filteredBooks = sellerBooks.filter(book => {
@@ -304,6 +326,12 @@ const SellerDashboard = () => {
             onClick={() => setActiveTab("analytics")}
           >
             Analytics
+          </button>
+          <button
+            className={`px-4 py-2 font-medium ${activeTab === "profile" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
+            onClick={() => setActiveTab("profile")}
+          >
+            Profile
           </button>
         </div>
 
@@ -620,6 +648,58 @@ const SellerDashboard = () => {
               </Card>
             </div>
           </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === "profile" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Seller Profile</CardTitle>
+              <CardDescription>Manage your profile information and preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Show Phone Number to Buyers</p>
+                    <p className="text-sm text-muted-foreground">
+                      Allow buyers to contact you directly via phone
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={sellerData?.showPhone || false}
+                  onCheckedChange={handlePhoneVisibilityChange}
+                />
+              </div>
+              
+              {sellerData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input value={sellerData.name} disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input value={sellerData.email} disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input value={sellerData.phone} disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Location</Label>
+                    <Input value={sellerData.location} disabled />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Bio</Label>
+                    <Textarea value={sellerData.bio} disabled />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
