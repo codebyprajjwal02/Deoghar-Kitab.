@@ -124,6 +124,7 @@ const BrowseBooks = () => {
           price: book.price,
           condition: book.condition,
           image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
+          sellerEmail: book.sellerEmail, // Include seller email
         }));
         
         // Combine initial books with published seller books
@@ -156,6 +157,7 @@ const BrowseBooks = () => {
     image: string;
     condition: string;
     quantity: number;
+    sellerEmail?: string; // Added seller email
   }
 
   const toggleFavorite = (id: number) => {
@@ -224,7 +226,7 @@ const BrowseBooks = () => {
       // If book exists, update quantity
       cart[existingItemIndex].quantity += 1;
     } else {
-      // If book doesn't exist, add new item
+      // If book doesn't exist, add new item with seller email
       cart.push({
         id: book.id,
         title: book.title,
@@ -232,7 +234,8 @@ const BrowseBooks = () => {
         price: book.price,
         image: book.image,
         condition: book.condition,
-        quantity: 1
+        quantity: 1,
+        sellerEmail: book.sellerEmail, // Include seller email
       });
     }
     

@@ -8,12 +8,15 @@ import {
   Minus,
   ArrowLeft,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Phone,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define the cart item type
 interface CartItem {
@@ -24,6 +27,17 @@ interface CartItem {
   image: string;
   condition: string;
   quantity: number;
+  sellerEmail?: string; // Added seller email
+}
+
+// Define seller data type
+interface SellerData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  showPhone: boolean;
 }
 
 const CartPage = () => {
@@ -31,6 +45,8 @@ const CartPage = () => {
   const { t } = useLanguage();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [sellerData, setSellerData] = useState<SellerData | null>(null);
+  const [sameSellerError, setSameSellerError] = useState(false);
 
   useEffect(() => {
     // Load cart from localStorage
@@ -39,8 +55,37 @@ const CartPage = () => {
       const parsedCart: CartItem[] = JSON.parse(savedCart);
       setCart(parsedCart);
       calculateTotal(parsedCart);
+      
+      // Check if all items are from the same seller
+      checkSameSeller(parsedCart);
     }
   }, []);
+
+  const checkSameSeller = (cartItems: CartItem[]) => {
+    if (cartItems.length === 0) {
+      setSameSellerError(false);
+      setSellerData(null);
+      return;
+    }
+    
+    // Get the seller email of the first item
+    const firstSellerEmail = cartItems[0].sellerEmail;
+    
+    // Check if all items have the same seller email
+    const allSameSeller = cartItems.every(item => item.sellerEmail === firstSellerEmail);
+    
+    if (allSameSeller && firstSellerEmail) {
+      setSameSellerError(false);
+      // Load seller data
+      const sellerDataString = localStorage.getItem(`seller_${firstSellerEmail}`);
+      if (sellerDataString) {
+        setSellerData(JSON.parse(sellerDataString));
+      }
+    } else {
+      setSameSellerError(true);
+      setSellerData(null);
+    }
+  };
 
   const calculateTotal = (cartItems: CartItem[]) => {
     const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -57,6 +102,7 @@ const CartPage = () => {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     calculateTotal(updatedCart);
+    checkSameSeller(updatedCart);
   };
 
   const removeItem = (id: number) => {
@@ -64,6 +110,13 @@ const CartPage = () => {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     calculateTotal(updatedCart);
+    checkSameSeller(updatedCart);
+  };
+
+  const handleCallSeller = () => {
+    if (sellerData && sellerData.phone) {
+      window.location.href = `tel:${sellerData.phone}`;
+    }
   };
 
   const handleCheckout = () => {
@@ -118,6 +171,18 @@ const CartPage = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+          
+          {/* Same Seller Error Alert */}
+          {sameSellerError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                You can only purchase books from the same seller in one transaction. 
+                Please remove items from other sellers or complete separate purchases.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
@@ -213,6 +278,31 @@ const CartPage = () => {
                     </div>
                   </div>
                   
+                  {/* Seller Contact Information */}
+                  {sellerData && sellerData.showPhone && !sameSellerError && (
+                    <Card className="border-primary mt-4">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Phone className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Contact Seller</p>
+                              <p className="text-sm text-muted-foreground">
+                                {sellerData.name}
+                              </p>
+                            </div>
+                          </div>
+                          <Button onClick={handleCallSeller} className="flex items-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            Call Now
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
                   <div className="bg-blue-50 p-4 rounded-lg mt-4">
                     <p className="text-sm text-blue-800">
                       <span className="font-semibold">Free Shipping</span> on orders over ₹499
@@ -220,7 +310,11 @@ const CartPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-3">
-                  <Button className="w-full py-6 text-lg hover:scale-[1.02] transition-transform" onClick={handleCheckout}>
+                  <Button 
+                    className="w-full py-6 text-lg hover:scale-[1.02] transition-transform" 
+                    onClick={handleCheckout}
+                    disabled={sameSellerError || cart.length === 0}
+                  >
                     Proceed to Checkout
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>

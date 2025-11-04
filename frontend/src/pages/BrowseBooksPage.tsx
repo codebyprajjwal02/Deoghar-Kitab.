@@ -151,6 +151,7 @@ interface BrowseBook {
   condition: string;
   image: string;
   category: string;
+  sellerEmail?: string; // Added seller email
 }
 
 // Define the wishlist item type
@@ -172,6 +173,7 @@ interface CartItem {
   image: string;
   condition: string;
   quantity: number;
+  sellerEmail?: string; // Added seller email
 }
 
 const BrowseBooksPage = () => {
@@ -219,6 +221,7 @@ const BrowseBooksPage = () => {
           condition: book.condition,
           image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
           category: book.category || "reference", // Default category
+          sellerEmail: book.sellerEmail, // Include seller email
         }));
         
         // Combine initial books with published seller books
@@ -298,7 +301,7 @@ const BrowseBooksPage = () => {
       // If book exists, update quantity
       cart[existingItemIndex].quantity += 1;
     } else {
-      // If book doesn't exist, add new item
+      // If book doesn't exist, add new item with seller email
       cart.push({
         id: book.id,
         title: book.title,
@@ -306,7 +309,8 @@ const BrowseBooksPage = () => {
         price: book.price,
         image: book.image,
         condition: book.condition,
-        quantity: 1
+        quantity: 1,
+        sellerEmail: book.sellerEmail, // Include seller email
       });
     }
     
