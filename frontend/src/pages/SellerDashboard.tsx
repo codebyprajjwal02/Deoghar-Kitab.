@@ -54,7 +54,7 @@ interface SellerData {
 }
 
 interface SellerBook {
-  id: number;
+  id: number | string;
   title: string;
   author: string;
   price: number;
@@ -87,52 +87,8 @@ const SellerDashboard = () => {
   const [user, setUser] = useState<{email: string, userType: string} | null>(null);
   const [sellerData, setSellerData] = useState<SellerData | null>(null);
 
-  // Load seller books from localStorage or use mock data
-  const [sellerBooks, setSellerBooks] = useState<SellerBook[]>(() => {
-    const savedBooks = localStorage.getItem("sellerBooks");
-    if (savedBooks) {
-      return JSON.parse(savedBooks);
-    }
-    // Mock data for initial state
-    return [
-      {
-        id: 1,
-        title: "To Kill a Mockingbird",
-        author: "Harper Lee",
-        price: 299,
-        condition: "Good",
-        status: "Published",
-        date: "2023-05-15",
-        sales: 5,
-        revenue: 1495,
-        sellerEmail: "example@example.com",
-      },
-      {
-        id: 2,
-        title: "1984",
-        author: "George Orwell",
-        price: 249,
-        condition: "Excellent",
-        status: "Published",
-        date: "2023-05-18",
-        sales: 3,
-        revenue: 747,
-        sellerEmail: "example@example.com",
-      },
-      {
-        id: 3,
-        title: "Pride and Prejudice",
-        author: "Jane Austen",
-        price: 199,
-        condition: "Fair",
-        status: "Pending",
-        date: "2023-05-20",
-        sales: 0,
-        revenue: 0,
-        sellerEmail: "example@example.com",
-      },
-    ];
-  });
+  // Load seller books from the backend
+  const [sellerBooks, setSellerBooks] = useState<SellerBook[]>([]);
 
   useEffect(() => {
     // Check if user is logged in
@@ -151,16 +107,54 @@ const SellerDashboard = () => {
         }
         setSellerData(parsedSellerData);
       }
+      
+      // Fetch seller's books from the backend
+      fetchSellerBooks(userData.id);
     } else {
       // Redirect to login if not logged in
       navigate("/");
     }
   }, [navigate]);
 
-  // Save seller books to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("sellerBooks", JSON.stringify(sellerBooks));
-  }, [sellerBooks]);
+  const fetchSellerBooks = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3003/api/books/seller/${userId}`);
+      if (response.ok) {
+        const books: {
+          _id: string;
+          title: string;
+          author: string;
+          price: number;
+          condition: string;
+          status: string;
+          createdAt: string;
+          category?: string;
+          description?: string;
+        }[] = await response.json();
+        
+        // Transform backend books to match our interface
+        const transformedBooks = books.map((book) => ({
+          id: book._id,
+          title: book.title,
+          author: book.author,
+          price: book.price,
+          condition: book.condition,
+          status: book.status,
+          date: book.createdAt ? new Date(book.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sales: 0, // Placeholder - you may want to track sales in your backend
+          revenue: 0, // Placeholder - you may want to track revenue in your backend
+          sellerEmail: user?.email || "",
+          category: book.category,
+          description: book.description,
+        }));
+        setSellerBooks(transformedBooks);
+      } else {
+        console.error("Failed to fetch seller books");
+      }
+    } catch (error) {
+      console.error("Error fetching seller books:", error);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -188,44 +182,82 @@ const SellerDashboard = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle book submission logic here
-    console.log("Book submitted:", formData, bookImages);
     
-    // Add new book to seller's books
-    const newBook = {
-      id: Date.now(), // Use timestamp for unique ID
-      title: formData.title,
-      author: formData.author,
-      price: parseInt(formData.price),
-      condition: formData.condition,
-      status: "Pending",
-      date: new Date().toISOString().split('T')[0],
-      sales: 0,
-      revenue: 0,
-      sellerEmail: user?.email || "",
-    };
-    
-    const updatedBooks = [...sellerBooks, newBook];
-    setSellerBooks(updatedBooks);
-    
-    // Reset form
-    setFormData({
-      title: "",
-      author: "",
-      price: "",
-      condition: "good",
-      description: "",
-      category: "ncert",
-    });
-    
-    // Reset images
-    setBookImages([]);
-    setImagePreviews([]);
-    
-    // Show success message
-    alert("Book added successfully! It will be reviewed and published shortly.");
+    try {
+      // Get the user ID from localStorage (you may need to adjust this based on your auth system)
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        alert("User not logged in");
+        return;
+      }
+      
+      const userData = JSON.parse(userString);
+      
+      // Prepare the book data
+      const bookData = {
+        title: formData.title,
+        author: formData.author,
+        description: formData.description,
+        price: parseInt(formData.price),
+        category: formData.category,
+        condition: formData.condition,
+        seller: userData.id, // assuming user ID is stored in userData.id
+        sellerName: userData.name || "Unknown Seller",
+        contactInfo: {
+          phone: sellerData?.phone || "",
+          email: userData.email
+        },
+        status: "available"
+      };
+      
+      // Send the book data to the backend
+      const response = await fetch("http://localhost:3003/api/books", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookData),
+      });
+      
+      if (response.ok) {
+        const newBook = await response.json();
+        
+        // Update local state
+        const updatedBooks = [...sellerBooks, {
+          ...newBook,
+          id: newBook._id,
+          date: new Date().toISOString().split('T')[0],
+          sales: 0,
+          revenue: 0,
+          sellerEmail: user?.email || "",
+        }];
+        setSellerBooks(updatedBooks);
+        
+        // Reset form
+        setFormData({
+          title: "",
+          author: "",
+          price: "",
+          condition: "good",
+          description: "",
+          category: "ncert",
+        });
+        
+        // Reset images
+        setBookImages([]);
+        setImagePreviews([]);
+        
+        alert("Book added successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message || "Failed to add book"}`);
+      }
+    } catch (error) {
+      console.error("Error submitting book:", error);
+      alert("An error occurred while submitting the book");
+    }
   };
 
   const handlePhoneVisibilityChange = (checked: boolean) => {

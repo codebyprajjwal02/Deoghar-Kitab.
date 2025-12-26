@@ -63,7 +63,7 @@ import {
 
 // Define the book type
 interface AdminBook {
-  id: number;
+  id: number | string;
   title: string;
   author: string;
   price: number;
@@ -77,7 +77,7 @@ interface AdminBook {
 }
 
 interface User {
-  id: number;
+  id: number | string;
   name: string;
   email: string;
   role: string;
@@ -159,48 +159,10 @@ const AdminDashboard = () => {
     confirmPassword: "",
   });
 
-  // Load seller books from localStorage
-  const [books, setBooks] = useState<AdminBook[]>(() => {
-    const sellerBooksString = localStorage.getItem("sellerBooks");
-    if (sellerBooksString) {
-      try {
-        const sellerBooks: AdminBook[] = JSON.parse(sellerBooksString);
-        return sellerBooks;
-      } catch (error) {
-        console.error("Error parsing seller books:", error);
-        return [
-          { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", price: 299, condition: "Good", status: "Published", seller: "John Doe", date: "2023-05-15" },
-          { id: 2, title: "1984", author: "George Orwell", price: 249, condition: "Excellent", status: "Published", seller: "Sarah Smith", date: "2023-05-18" },
-          { id: 3, title: "Pride and Prejudice", author: "Jane Austen", price: 199, condition: "Fair", status: "Pending", seller: "Mike Johnson", date: "2023-05-20" },
-          { id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 349, condition: "Excellent", status: "Published", seller: "Emma Wilson", date: "2023-05-22" },
-          { id: 5, title: "Moby Dick", author: "Herman Melville", price: 279, condition: "Good", status: "Rejected", seller: "David Brown", date: "2023-05-25" },
-        ];
-      }
-    }
-    return [
-      { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", price: 299, condition: "Good", status: "Published", seller: "John Doe", date: "2023-05-15" },
-      { id: 2, title: "1984", author: "George Orwell", price: 249, condition: "Excellent", status: "Published", seller: "Sarah Smith", date: "2023-05-18" },
-      { id: 3, title: "Pride and Prejudice", author: "Jane Austen", price: 199, condition: "Fair", status: "Pending", seller: "Mike Johnson", date: "2023-05-20" },
-      { id: 4, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 349, condition: "Excellent", status: "Published", seller: "Emma Wilson", date: "2023-05-22" },
-      { id: 5, title: "Moby Dick", author: "Herman Melville", price: 279, condition: "Good", status: "Rejected", seller: "David Brown", date: "2023-05-25" },
-    ];
-  });
-
-  const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com", role: "Buyer", status: "Active", joinDate: "2023-01-15", orders: 12 },
-    { id: 2, name: "Sarah Smith", email: "sarah@example.com", role: "Seller", status: "Active", joinDate: "2023-02-20", orders: 8 },
-    { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "Buyer", status: "Active", joinDate: "2023-03-10", orders: 5 },
-    { id: 4, name: "Emma Wilson", email: "emma@example.com", role: "Seller", status: "Suspended", joinDate: "2023-04-05", orders: 15 },
-    { id: 5, name: "David Brown", email: "david@example.com", role: "Buyer", status: "Active", joinDate: "2023-05-01", orders: 3 },
-  ]);
-
-  const [orders, setOrders] = useState([
-    { id: 1001, book: "To Kill a Mockingbird", buyer: "Alice Cooper", seller: "John Doe", amount: 299, status: "Completed", date: "2023-05-16" },
-    { id: 1002, book: "1984", buyer: "Bob Martin", seller: "Sarah Smith", amount: 249, status: "Processing", date: "2023-05-19" },
-    { id: 1003, book: "The Great Gatsby", buyer: "Carol White", seller: "Emma Wilson", amount: 349, status: "Shipped", date: "2023-05-23" },
-    { id: 1004, book: "Pride and Prejudice", buyer: "Daniel Green", seller: "Mike Johnson", amount: 199, status: "Completed", date: "2023-05-21" },
-  ]);
-
+  // Load data from backend
+  const [books, setBooks] = useState<AdminBook[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   // State for pending sellers
   const [pendingSellers, setPendingSellers] = useState<RegisteredSeller[]>([]);
 
@@ -236,46 +198,137 @@ const AdminDashboard = () => {
       } else {
         setAdminEmail(userData.email);
         setProfileData(prev => ({ ...prev, email: userData.email }));
+        
+        // Fetch data from backend
+        fetchBooks();
+        fetchUsers();
+        fetchOrders();
+        fetchPendingSellers();
       }
     } else {
       // Redirect to login if not logged in
       navigate("/admin/login");
     }
-    
-    // Load books from localStorage
-    loadBooks();
-    
-    // Load pending sellers
-    loadPendingSellers();
   }, [navigate]);
 
-  const loadBooks = () => {
-    const sellerBooksString = localStorage.getItem("sellerBooks");
-    if (sellerBooksString) {
-      try {
-        const sellerBooks = JSON.parse(sellerBooksString);
-        setBooks(sellerBooks);
-      } catch (error) {
-        console.error("Error parsing seller books:", error);
+  // Define interfaces for backend data
+  interface BackendBook {
+    _id: string;
+    title: string;
+    author: string;
+    description: string;
+    price: number;
+    category: string;
+    condition: string;
+    images: string[];
+    seller: string; // user ID
+    sellerName: string;
+    contactInfo: {
+      phone: string;
+      email: string;
+    };
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  interface BackendUser {
+    _id: string;
+    name: string;
+    email: string;
+    userType: string;
+    createdAt: string;
+  }
+
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:3003/api/books");
+      if (response.ok) {
+        const booksData: BackendBook[] = await response.json();
+        // Transform backend books to match our interface
+        const transformedBooks = booksData.map((book) => ({
+          id: book._id,
+          title: book.title,
+          author: book.author,
+          price: book.price,
+          condition: book.condition,
+          status: book.status,
+          seller: book.sellerName,
+          date: book.createdAt ? new Date(book.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        }));
+        setBooks(transformedBooks);
+      } else {
+        console.error("Failed to fetch books");
       }
+    } catch (error) {
+      console.error("Error fetching books:", error);
     }
   };
 
-  // Save books to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("sellerBooks", JSON.stringify(books));
-  }, [books]);
-
-  const loadPendingSellers = () => {
-    const sellersString = localStorage.getItem("all_sellers");
-    if (sellersString) {
-      try {
-        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
-        const pending = allSellers.filter(seller => seller.status === "pending");
-        setPendingSellers(pending);
-      } catch (error) {
-        console.error("Error parsing sellers:", error);
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("http://localhost:3003/api/users");
+      if (response.ok) {
+        const usersData: BackendUser[] = await response.json();
+        // Transform backend users to match our interface
+        const transformedUsers = usersData.map((user) => ({
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.userType,
+          status: "Active", // Default status, you might want to add this to your User model
+          joinDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          orders: 0, // Placeholder - you may want to track this in your backend
+        }));
+        setUsers(transformedUsers);
+      } else {
+        console.error("Failed to fetch users");
       }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      // Placeholder for orders - you'll need to implement an Orders model and API
+      // For now, using mock data
+      setOrders([
+        { id: 1001, book: "To Kill a Mockingbird", buyer: "Alice Cooper", seller: "John Doe", amount: 299, status: "Completed", date: "2023-05-16" },
+        { id: 1002, book: "1984", buyer: "Bob Martin", seller: "Sarah Smith", amount: 249, status: "Processing", date: "2023-05-19" },
+        { id: 1003, book: "The Great Gatsby", buyer: "Carol White", seller: "Emma Wilson", amount: 349, status: "Shipped", date: "2023-05-23" },
+        { id: 1004, book: "Pride and Prejudice", buyer: "Daniel Green", seller: "Mike Johnson", amount: 199, status: "Completed", date: "2023-05-21" },
+      ]);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+
+  const fetchPendingSellers = async () => {
+    try {
+      // Fetch users with seller role that need approval
+      const response = await fetch("http://localhost:3003/api/users");
+      if (response.ok) {
+        const usersData: BackendUser[] = await response.json();
+        // Filter for users with seller role who need approval
+        // For now, we'll assume all users with 'seller' role are pending
+        const pendingSellersData = usersData
+          .filter((user) => user.userType === "seller")
+          .map((user) => ({
+            name: user.name,
+            email: user.email,
+            phone: "", // Backend doesn't have phone in user model yet
+            location: "", // Backend doesn't have location in user model yet
+            bio: "", // Backend doesn't have bio in user model yet
+            status: "pending",
+            registeredDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          }));
+        setPendingSellers(pendingSellersData);
+      } else {
+        console.error("Failed to fetch pending sellers");
+      }
+    } catch (error) {
+      console.error("Error fetching pending sellers:", error);
     }
   };
 
@@ -305,21 +358,51 @@ const AdminDashboard = () => {
            order.seller.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  const updateBookStatus = (id: number, status: string) => {
-    const updatedBooks = books.map(book => 
-      book.id === id ? { ...book, status } : book
-    );
-    setBooks(updatedBooks);
-    
-    // If book is published, also update it in the browse sections
-    if (status === "Published") {
-      // The browse sections already read from localStorage, so no additional action needed
-      // The book will automatically appear in browse sections
+  const updateBookStatus = async (id: number | string, status: string) => {
+    try {
+      // Update the book status in the backend
+      const response = await fetch(`http://localhost:3003/api/books/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status })
+      });
+      
+      if (response.ok) {
+        // Update the local state
+        const updatedBooks = books.map(book => 
+          book.id === id ? { ...book, status } : book
+        );
+        setBooks(updatedBooks);
+      } else {
+        console.error('Failed to update book status');
+        alert('Failed to update book status');
+      }
+    } catch (error) {
+      console.error('Error updating book status:', error);
+      alert('Error updating book status');
     }
   };
 
-  const deleteUser = (id: number) => {
-    setUsers(users.filter(user => user.id !== id));
+  const deleteUser = async (id: number | string) => {
+    try {
+      // Delete the user from the backend
+      const response = await fetch(`http://localhost:3003/api/users/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Update the local state
+        setUsers(users.filter(user => user.id !== id));
+      } else {
+        console.error('Failed to delete user');
+        alert('Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user');
+    }
   };
 
   const handleDatabaseBackup = () => {
@@ -405,48 +488,81 @@ const AdminDashboard = () => {
   };
 
   // Function to approve a seller
-  const approveSeller = (email: string) => {
-    const sellersString = localStorage.getItem("all_sellers");
-    if (sellersString) {
-      try {
-        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
-        const updatedSellers = allSellers.map(seller => 
-          seller.email === email ? { ...seller, status: "approved" } : seller
-        );
-        localStorage.setItem("all_sellers", JSON.stringify(updatedSellers));
-        loadPendingSellers(); // Refresh the list
+  const approveSeller = async (email: string) => {
+    try {
+      // Find the user ID by email
+      const userResponse = await fetch(`http://localhost:3003/api/users`);
+      if (userResponse.ok) {
+        const usersData: BackendUser[] = await userResponse.json();
+        const userToApprove = usersData.find(user => user.email === email);
         
-        // Also update the user's role to "Seller" in the users list
-        setUsers(prevUsers => 
-          prevUsers.map(user => 
-            user.email === email ? { ...user, role: "Seller" } : user
-          )
-        );
-        
-        alert("Seller approved successfully!");
-      } catch (error) {
-        console.error("Error updating seller status:", error);
-        alert("Error approving seller. Please try again.");
+        if (userToApprove) {
+          // Update user's role to seller in the backend
+          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToApprove._id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userType: 'seller'
+            })
+          });
+          
+          if (updateResponse.ok) {
+            // Refresh the data
+            fetchPendingSellers();
+            fetchUsers();
+            
+            alert("Seller approved successfully!");
+          } else {
+            alert("Error approving seller. Please try again.");
+          }
+        } else {
+          alert("Seller not found.");
+        }
       }
+    } catch (error) {
+      console.error("Error approving seller:", error);
+      alert("Error approving seller. Please try again.");
     }
   };
 
   // Function to reject a seller
-  const rejectSeller = (email: string) => {
-    const sellersString = localStorage.getItem("all_sellers");
-    if (sellersString) {
-      try {
-        const allSellers: RegisteredSeller[] = JSON.parse(sellersString);
-        const updatedSellers = allSellers.map(seller => 
-          seller.email === email ? { ...seller, status: "rejected" } : seller
-        );
-        localStorage.setItem("all_sellers", JSON.stringify(updatedSellers));
-        loadPendingSellers(); // Refresh the list
-        alert("Seller rejected successfully!");
-      } catch (error) {
-        console.error("Error updating seller status:", error);
-        alert("Error rejecting seller. Please try again.");
+  const rejectSeller = async (email: string) => {
+    try {
+      // Find the user ID by email
+      const userResponse = await fetch(`http://localhost:3003/api/users`);
+      if (userResponse.ok) {
+        const usersData: BackendUser[] = await userResponse.json();
+        const userToReject = usersData.find(user => user.email === email);
+        
+        if (userToReject) {
+          // Update user's role back to user in the backend
+          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToReject._id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userType: 'user'
+            })
+          });
+          
+          if (updateResponse.ok) {
+            // Refresh the data
+            fetchPendingSellers();
+            
+            alert("Seller rejected successfully!");
+          } else {
+            alert("Error rejecting seller. Please try again.");
+          }
+        } else {
+          alert("Seller not found.");
+        }
       }
+    } catch (error) {
+      console.error("Error rejecting seller:", error);
+      alert("Error rejecting seller. Please try again.");
     }
   };
 
@@ -819,7 +935,7 @@ const AdminDashboard = () => {
                             <Button variant="outline" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => deleteUser(user.id)}>
+                            <Button variant="outline" size="sm" onClick={async () => deleteUser(user.id)}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
