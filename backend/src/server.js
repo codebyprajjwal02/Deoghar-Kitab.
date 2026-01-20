@@ -22,8 +22,8 @@ app.use(express.json());
 app.use('/api', routes);
 
 // Simple route for testing
-app.get('/', (req, res) => {
-  res.json({ 
+app.get(["/","/\n","/%0A"], (req, res) => {
+  res.status(200).json({ 
     message: 'Deoghar Kitab Backend Server', 
     status: 'Running',
     version: '1.0.0'

@@ -237,6 +237,18 @@ const AdminDashboard = () => {
     name: string;
     email: string;
     userType: string;
+    sellerRequest?: {
+      requested: boolean;
+      requestedAt?: string;
+      approved: boolean;
+      approvedAt?: string;
+    };
+    sellerInfo?: {
+      name: string;
+      phone: string;
+      location: string;
+      bio: string;
+    };
     createdAt: string;
   }
 
@@ -306,22 +318,21 @@ const AdminDashboard = () => {
 
   const fetchPendingSellers = async () => {
     try {
-      // Fetch users with seller role that need approval
+      // Fetch all users
       const response = await fetch("http://localhost:3003/api/users");
       if (response.ok) {
         const usersData: BackendUser[] = await response.json();
-        // Filter for users with seller role who need approval
-        // For now, we'll assume all users with 'seller' role are pending
+        // Filter for users who have requested to become sellers but are not yet approved
         const pendingSellersData = usersData
-          .filter((user) => user.userType === "seller")
+          .filter((user) => user.sellerRequest && user.sellerRequest.requested && !user.sellerRequest.approved)
           .map((user) => ({
-            name: user.name,
+            name: user.sellerInfo?.name || user.name,
             email: user.email,
-            phone: "", // Backend doesn't have phone in user model yet
-            location: "", // Backend doesn't have location in user model yet
-            bio: "", // Backend doesn't have bio in user model yet
+            phone: user.sellerInfo?.phone || "",
+            location: user.sellerInfo?.location || "",
+            bio: user.sellerInfo?.bio || "",
             status: "pending",
-            registeredDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            registeredDate: user.sellerRequest?.requestedAt ? new Date(user.sellerRequest.requestedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           }));
         setPendingSellers(pendingSellersData);
       } else {
@@ -497,15 +508,12 @@ const AdminDashboard = () => {
         const userToApprove = usersData.find(user => user.email === email);
         
         if (userToApprove) {
-          // Update user's role to seller in the backend
-          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToApprove._id}`, {
+          // Approve the seller request in the backend
+          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToApprove._id}/approve-seller`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              userType: 'seller'
-            })
           });
           
           if (updateResponse.ok) {
@@ -515,7 +523,8 @@ const AdminDashboard = () => {
             
             alert("Seller approved successfully!");
           } else {
-            alert("Error approving seller. Please try again.");
+            const errorData = await updateResponse.json();
+            alert(`Error approving seller: ${errorData.message || 'Please try again.'}`);
           }
         } else {
           alert("Seller not found.");
@@ -537,24 +546,22 @@ const AdminDashboard = () => {
         const userToReject = usersData.find(user => user.email === email);
         
         if (userToReject) {
-          // Update user's role back to user in the backend
-          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToReject._id}`, {
+          // Reject the seller request in the backend
+          const updateResponse = await fetch(`http://localhost:3003/api/users/${userToReject._id}/reject-seller`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              userType: 'user'
-            })
           });
           
           if (updateResponse.ok) {
             // Refresh the data
             fetchPendingSellers();
             
-            alert("Seller rejected successfully!");
+            alert("Seller request rejected successfully!");
           } else {
-            alert("Error rejecting seller. Please try again.");
+            const errorData = await updateResponse.json();
+            alert(`Error rejecting seller: ${errorData.message || 'Please try again.'}`);
           }
         } else {
           alert("Seller not found.");

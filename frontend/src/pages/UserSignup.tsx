@@ -28,13 +28,58 @@ const UserSignup = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log("User signup submitted:", { ...formData, userType });
     
-    // Navigate to home after signup
-    navigate("/");
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    
+    try {
+      // Prepare user data
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        userType: userType === "seller" ? "seller" : "user"
+      };
+      
+      // Call the backend API to register the user
+      const response = await fetch("http://localhost:3003/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (response.ok) {
+        const newUser = await response.json();
+        console.log("User registered successfully:", newUser);
+        
+        // Store user data in localStorage (you might want to implement proper auth)
+        localStorage.setItem("user", JSON.stringify({
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          userType: newUser.userType
+        }));
+        
+        // Show success message
+        alert("Account created successfully!");
+        
+        // Navigate to home after signup
+        navigate("/");
+      } else {
+        const errorData = await response.json();
+        alert(`Registration failed: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+      alert("An error occurred during registration");
+    }
   };
 
   return (

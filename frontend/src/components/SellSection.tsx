@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Upload, DollarSign, Camera, BookOpen, User } from "lucide-react";
+import { Upload, DollarSign, Camera, BookOpen, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,26 +12,111 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
+import SellerRegistrationForm from "@/components/SellerRegistrationForm";
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  userType: string;
+}
+
+interface SellerData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+}
 
 const SellSection = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [showSellerForm, setShowSellerForm] = useState(false);
+  const [userSellerStatus, setUserSellerStatus] = useState<'user' | 'pending' | 'seller' | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
     const userString = localStorage.getItem("user");
-    setIsLoggedIn(!!userString);
+    if (userString) {
+      const userData = JSON.parse(userString);
+      setIsLoggedIn(true);
+      setUser(userData);
+      
+      // Check user's seller status
+      checkSellerStatus(userData.id);
+    }
   }, []);
+
+  const checkSellerStatus = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        
+        if (userData.userType === 'seller') {
+          setUserSellerStatus('seller');
+        } else if (userData.sellerRequest && userData.sellerRequest.requested && !userData.sellerRequest.approved) {
+          setUserSellerStatus('pending');
+        } else {
+          setUserSellerStatus('user');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking seller status:', error);
+    }
+  };
 
   const handleSellBooks = () => {
     if (!isLoggedIn) {
       alert("Please sign in to sell books");
-      window.location.href = "/";
+      navigate("/");
       return;
     }
     
-    // Redirect to seller dashboard
-    window.location.href = "/seller";
+    if (userSellerStatus === 'seller') {
+      // User is already a seller, redirect to seller dashboard
+      navigate("/seller");
+    } else if (userSellerStatus === 'pending') {
+      // User has a pending request, show message
+      alert("Your seller request is pending approval. You will be notified when approved.");
+    } else if (userSellerStatus === 'user') {
+      // User is not a seller, open seller registration form
+      setShowSellerForm(true);
+    }
+  };
+
+  const handleSellerFormSubmit = (sellerData: SellerData) => {
+    setShowSellerForm(false);
+    alert("Seller request submitted successfully. Please wait for admin approval.");
+    // Update user status to pending
+    setUserSellerStatus('pending');
+  };
+
+  const handleCancelRequest = async () => {
+    if (window.confirm("Are you sure you want to cancel your seller request?")) {
+      try {
+        const response = await fetch(`http://localhost:3003/api/users/${user.id}/cancel-seller-request`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          alert("Seller request cancelled successfully.");
+          setUserSellerStatus('user');
+        } else {
+          alert("Failed to cancel seller request. Please try again.");
+        }
+      } catch (error) {
+        console.error('Error cancelling seller request:', error);
+        alert("Error cancelling seller request. Please try again.");
+      }
+    }
   };
 
   return (
@@ -57,6 +142,23 @@ const SellSection = () => {
                 <User className="w-4 h-4" />
                 <span>Sign in to start selling your books</span>
               </p>
+            </div>
+          )}
+          
+          {isLoggedIn && userSellerStatus === 'pending' && (
+            <div className="mt-4 p-3 bg-yellow-50 rounded-lg inline-block">
+              <p className="text-yellow-800 flex items-center justify-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>Your seller request is pending approval. You will be notified when approved.</span>
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={handleCancelRequest}
+              >
+                Cancel Request
+              </Button>
             </div>
           )}
         </motion.div>
@@ -121,7 +223,11 @@ const SellSection = () => {
                 <h3 className="text-2xl font-semibold mb-2">Ready to Sell?</h3>
                 <p className="text-muted-foreground">
                   {isLoggedIn 
-                    ? "List your books and start earning money today!" 
+                    ? (userSellerStatus === 'seller' 
+                        ? "List your books and start earning money today!" 
+                        : userSellerStatus === 'pending' 
+                          ? "Your seller request is pending approval" 
+                          : "Apply to become a seller to start selling your books")
                     : "Sign in to start selling your books on Deoghar Kitab"}
                 </p>
               </div>
@@ -130,12 +236,27 @@ const SellSection = () => {
                 onClick={handleSellBooks}
                 className="w-full hover:scale-105 transition-transform"
                 size="lg"
+                disabled={userSellerStatus === 'pending'}
               >
-                {isLoggedIn ? "Go to Seller Dashboard" : "Sign In to Sell Books"}
+                {isLoggedIn 
+                  ? (userSellerStatus === 'seller' 
+                      ? "Go to Seller Dashboard" 
+                      : userSellerStatus === 'pending' 
+                        ? "Request Pending" 
+                        : "Become a Seller")
+                  : "Sign In to Sell Books"}
               </Button>
             </motion.div>
           </div>
         </div>
+        
+        {/* Seller Registration Form Modal */}
+        {showSellerForm && user && (
+          <SellerRegistrationForm 
+            onSubmit={handleSellerFormSubmit} 
+            onCancel={() => setShowSellerForm(false)} 
+          />
+        )}
       </div>
     </section>
   );

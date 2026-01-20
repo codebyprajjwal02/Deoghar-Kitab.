@@ -1,27 +1,18 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    // MongoDB connection string from environment variables
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB Atlas Connected:", conn.connection.host);
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    
-    // If MongoDB Atlas connection fails, try local MongoDB
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Trying to connect to local MongoDB...');
-      try {
-        const localConn = await mongoose.connect('mongodb://localhost:27017/deoghar_kitab');
-        console.log(`Local MongoDB Connected: ${localConn.connection.host}`);
-      } catch (localError) {
-        console.error(`Local MongoDB connection error: ${localError.message}`);
-        process.exit(1);
-      }
+    console.error("MongoDB Atlas connection failed:", error.message);
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("Trying to connect to local MongoDB...");
+      const localConn = await mongoose.connect(
+        "mongodb://127.0.0.1:27017/deoghar_kitab"
+      );
+      console.log("Local MongoDB Connected:", localConn.connection.host);
     } else {
       process.exit(1);
     }

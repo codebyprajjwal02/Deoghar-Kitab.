@@ -18,11 +18,7 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
 
-  // Hardcoded admin credentials for exclusive access
-  const ADMIN_CREDENTIALS = {
-    email: "sprajjwalsingh230@gmail.com",
-    password: "123456"
-  };
+  // Admin credentials will be verified through the database
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,30 +28,60 @@ const AdminLogin = () => {
     }));
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Show loading animation
     setIsLoading(true);
     setShowLoading(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      // Validate admin credentials
-      if (loginData.email === ADMIN_CREDENTIALS.email && loginData.password === ADMIN_CREDENTIALS.password) {
-        // Store user in localStorage to indicate they're logged in as admin
-        localStorage.setItem("user", JSON.stringify({
-          email: loginData.email,
-          userType: "admin"
-        }));
+    try {
+      // Prepare login data
+      const loginDataToSend = {
+        email: loginData.email,
+        password: loginData.password,
+      };
+      
+      // Call the backend API to authenticate the user
+      const response = await fetch("http://localhost:3003/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loginDataToSend),
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
         
-        // Navigate to admin dashboard will happen in the LoadingAnimation component
+        // Check if user is an admin
+        if (userData.userType === "admin") {
+          // Store user in localStorage to indicate they're logged in as admin
+          localStorage.setItem("user", JSON.stringify({
+            id: userData._id,
+            email: userData.email,
+            name: userData.name,
+            userType: userData.userType
+          }));
+          
+          // Navigate to admin dashboard will happen in the LoadingAnimation component
+        } else {
+          setError("Access denied. Admin privileges required.");
+          setIsLoading(false);
+          setShowLoading(false);
+        }
       } else {
-        setError("Invalid admin credentials. Access restricted to authorized personnel only.");
+        const errorData = await response.json();
+        setError(errorData.message || "Invalid admin credentials. Access restricted to authorized personnel only.");
         setIsLoading(false);
         setShowLoading(false);
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Error during admin login:", error);
+      setError("An error occurred during login. Please try again.");
+      setIsLoading(false);
+      setShowLoading(false);
+    }
   };
 
   const handleLoadingComplete = () => {

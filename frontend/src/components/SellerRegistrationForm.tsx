@@ -97,16 +97,55 @@ const SellerRegistrationForm = ({ onSubmit, onCancel }: SellerRegistrationFormPr
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        onSubmit(formData);
+      
+      try {
+        // Get the user ID from localStorage
+        const userString = localStorage.getItem("user");
+        if (!userString) {
+          alert("User not logged in");
+          setLoading(false);
+          return;
+        }
+        
+        const userData = JSON.parse(userString);
+        
+        // Prepare seller request data
+        const sellerRequestData = {
+          name: formData.name,
+          phone: formData.phone,
+          location: formData.location,
+          bio: formData.bio,
+          email: formData.email // Using the email from form, though it should match the logged-in user's email
+        };
+        
+        // Send the seller request to the backend
+        const response = await fetch(`http://localhost:3003/api/users/${userData.id}/request-seller`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(sellerRequestData),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          alert("Seller request submitted successfully. Please wait for admin approval.");
+          onSubmit(formData);
+        } else {
+          const errorData = await response.json();
+          alert(`Error: ${errorData.message || "Failed to submit seller request"}`);
+        }
+      } catch (error) {
+        console.error("Error submitting seller request:", error);
+        alert("An error occurred while submitting your seller request");
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     }
   };
 

@@ -108,13 +108,42 @@ const SellerDashboard = () => {
         setSellerData(parsedSellerData);
       }
       
-      // Fetch seller's books from the backend
-      fetchSellerBooks(userData.id);
+      // Check user's seller status from the backend
+      checkSellerStatus(userData.id);
     } else {
       // Redirect to login if not logged in
       navigate("/");
     }
   }, [navigate]);
+
+  const checkSellerStatus = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Check if user is already a seller
+        if (userData.userType === 'seller') {
+          // User is already a seller, fetch their books
+          fetchSellerBooks(userId);
+        } else if (userData.sellerRequest && userData.sellerRequest.requested && !userData.sellerRequest.approved) {
+          // User has a pending seller request
+          alert('Your seller request is pending approval. You will be notified when approved.');
+          // Redirect to home since they can't access seller features yet
+          navigate('/');
+        } else {
+          // User is not a seller and has no pending request
+          alert('You need to be approved as a seller to access this dashboard. Please contact admin or apply to become a seller.');
+          // Redirect to home or a different page
+          navigate('/');
+        }
+      } else {
+        console.error('Failed to fetch user data');
+      }
+    } catch (error) {
+      console.error('Error checking seller status:', error);
+    }
+  };
 
   const fetchSellerBooks = async (userId: string) => {
     try {

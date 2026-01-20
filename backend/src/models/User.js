@@ -24,6 +24,34 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'seller', 'admin'],
     default: 'user'
   },
+  sellerRequest: {
+    requested: {
+      type: Boolean,
+      default: false
+    },
+    requestedAt: {
+      type: Date,
+      default: null
+    },
+    approved: {
+      type: Boolean,
+      default: false
+    },
+    approvedAt: {
+      type: Date,
+      default: null
+    }
+  },
+  sellerInfo: {
+    name: String,
+    phone: String,
+    location: String,
+    bio: String,
+    showPhone: {
+      type: Boolean,
+      default: false
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

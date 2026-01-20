@@ -39,7 +39,7 @@ const Login = () => {
     if (error) setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (userType === "admin") {
@@ -52,44 +52,50 @@ const Login = () => {
     setIsLoading(true);
     setShowLoading(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      // Get registered users from localStorage
-      const registeredUsersString = localStorage.getItem("registeredUsers");
-      const registeredUsers: RegisteredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+    try {
+      // Prepare login data
+      const loginData = {
+        email: formData.email,
+        password: formData.password,
+      };
       
-      // Find user by email
-      const user = registeredUsers.find((u: RegisteredUser) => u.email === formData.email);
+      // Call the backend API to authenticate the user
+      const response = await fetch("http://localhost:3003/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loginData),
+      });
       
-      // Check if user exists
-      if (!user) {
-        setError("No account found with this email. Please sign up first.");
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Store user data in localStorage to indicate they're logged in
+        localStorage.setItem("user", JSON.stringify({
+          id: userData._id,
+          name: userData.name,
+          email: userData.email,
+          userType: userData.userType
+        }));
+        
+        // Clear any previous errors
+        setError("");
+        
+        // Navigate based on user type
+        // The actual navigation will happen in the LoadingAnimation component
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Login failed. Please check your credentials.");
         setIsLoading(false);
         setShowLoading(false);
-        return;
       }
-      
-      // Check password
-      if (user.password !== formData.password) {
-        setError("Incorrect password. Please try again.");
-        setIsLoading(false);
-        setShowLoading(false);
-        return;
-      }
-      
-      // Clear any previous errors
-      setError("");
-      
-      // Store current user in localStorage to indicate they're logged in
-      localStorage.setItem("user", JSON.stringify({
-        name: user.name,
-        email: user.email,
-        userType: userType
-      }));
-      
-      // Navigate based on user type
-      // The actual navigation will happen in the LoadingAnimation component
-    }, 1500);
+    } catch (error) {
+      console.error("Error during login:", error);
+      setError("An error occurred during login. Please try again.");
+      setIsLoading(false);
+      setShowLoading(false);
+    }
   };
 
   const handleLoadingComplete = () => {

@@ -20,7 +20,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [user, setUser] = useState<{email: string, name: string} | null>(null);
+  const [user, setUser] = useState<{email: string, name: string, userType: string, id: string} | null>(null);
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -36,6 +36,8 @@ const ProfilePage = () => {
   });
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [userSellerStatus, setUserSellerStatus] = useState<'user' | 'pending' | 'seller' | null>(null);
+  const [sellerInfo, setSellerInfo] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -47,11 +49,37 @@ const ProfilePage = () => {
         name: userData.name || "",
         email: userData.email || "",
       });
+      
+      // Check user's seller status
+      if (userData.id) {
+        checkSellerStatus(userData.id);
+      }
     } else {
       // Redirect to login if not logged in
       navigate("/");
     }
   }, [navigate]);
+
+  const checkSellerStatus = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        
+        if (userData.userType === 'seller') {
+          setUserSellerStatus('seller');
+          setSellerInfo(userData.sellerInfo || null);
+        } else if (userData.sellerRequest && userData.sellerRequest.requested && !userData.sellerRequest.approved) {
+          setUserSellerStatus('pending');
+          setSellerInfo(userData.sellerInfo || null);
+        } else {
+          setUserSellerStatus('user');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking seller status:', error);
+    }
+  };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -228,6 +256,75 @@ const ProfilePage = () => {
                   </div>
                 </form>
               </CardContent>
+              
+              {/* Seller Status Section */}
+              {user && userSellerStatus && (
+                <CardFooter className="flex flex-col items-start gap-4 p-6 bg-muted/30">
+                  <div className="w-full">
+                    <h3 className="text-lg font-semibold mb-2">Seller Status</h3>
+                    
+                    {userSellerStatus === 'seller' && (
+                      <div className="flex items-center gap-2 text-green-700">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span>You are a verified seller</span>
+                      </div>
+                    )}
+                    
+                    {userSellerStatus === 'pending' && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-yellow-700">
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <span>Your seller request is pending approval</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={async () => {
+                            if (window.confirm("Are you sure you want to cancel your seller request?")) {
+                              try {
+                                const response = await fetch(`http://localhost:3003/api/users/${user.id}/cancel-seller-request`, {
+                                  method: 'PUT',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                });
+                                
+                                if (response.ok) {
+                                  alert("Seller request cancelled successfully.");
+                                  setUserSellerStatus('user');
+                                } else {
+                                  alert("Failed to cancel seller request. Please try again.");
+                                }
+                              } catch (error) {
+                                console.error('Error cancelling seller request:', error);
+                                alert("Error cancelling seller request. Please try again.");
+                              }
+                            }
+                          }}
+                        >
+                          Cancel Request
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {userSellerStatus === 'user' && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                          <span>You are not a seller</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => navigate("/home#sell")}
+                        >
+                          Become a Seller
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardFooter>
+              )}
             </Card>
           )}
 
