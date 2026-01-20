@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "@/pages/Index";
 import AuthPage from "@/pages/AuthPage";
+import ModernAuth from "@/pages/ModernAuth";
 import ForgotPassword from "@/pages/ForgotPassword";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -31,7 +32,8 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<AuthPage />} />
+                <Route path="/" element={<ModernAuth />} />
+                <Route path="/classic-auth" element={<AuthPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/home" element={<Index />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
