@@ -53,7 +53,7 @@ const FloatingBlob = ({
   return (
     <motion.div
       ref={blobRef}
-      className={`absolute rounded-full ${color} blur-3xl`}
+      className={`absolute rounded-full ${color} blur-3xl z-0`}
       style={{
         width: size,
         height: size,
@@ -63,7 +63,7 @@ const FloatingBlob = ({
         y: mousePosition.y,
       }}
       initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 0.3 }}
+      animate={{ scale: 1, opacity: 0.4 }}
       transition={{ 
         duration: 2, 
         delay,
@@ -79,9 +79,9 @@ const GlassCard = ({ children }: { children: React.ReactNode }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6, delay: 0.2 }}
-    className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl overflow-hidden"
+    className="backdrop-blur-2xl bg-white/20 border border-white/30 shadow-2xl rounded-3xl overflow-hidden z-30"
     style={{
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
+      boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.2)'
     }}
   >
     {children}
@@ -249,38 +249,40 @@ const ModernAuth = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50">
       {/* Animated Background Blobs */}
-      <FloatingBlob 
-        size={300} 
-        color="bg-blue-400" 
-        initialX="10%" 
-        initialY="15%" 
-        delay={0}
-        parallaxIntensity={0.05}
-      />
-      <FloatingBlob 
-        size={250} 
-        color="bg-purple-400" 
-        initialX="80%" 
-        initialY="10%" 
-        delay={0.3}
-        parallaxIntensity={0.08}
-      />
-      <FloatingBlob 
-        size={200} 
-        color="bg-indigo-400" 
-        initialX="70%" 
-        initialY="70%" 
-        delay={0.6}
-        parallaxIntensity={0.06}
-      />
+      <div className="absolute inset-0 overflow-hidden">
+        <FloatingBlob 
+          size={350} 
+          color="bg-blue-300" 
+          initialX="10%" 
+          initialY="15%" 
+          delay={0}
+          parallaxIntensity={0.05}
+        />
+        <FloatingBlob 
+          size={300} 
+          color="bg-purple-300" 
+          initialX="80%" 
+          initialY="10%" 
+          delay={0.3}
+          parallaxIntensity={0.08}
+        />
+        <FloatingBlob 
+          size={250} 
+          color="bg-indigo-300" 
+          initialX="70%" 
+          initialY="70%" 
+          delay={0.6}
+          parallaxIntensity={0.06}
+        />
+      </div>
       
       {/* Subtle grid pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:50px_50px]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:50px_50px] opacity-20"></div>
       
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Logo/Header */}
           <motion.div
@@ -329,23 +331,23 @@ const ModernAuth = () => {
               </AnimatePresence>
               
               {/* User Type Toggle */}
-              <div className="flex rounded-xl bg-white/20 backdrop-blur-sm p-1 mb-6 border border-white/30">
+              <div className="flex rounded-2xl bg-white/30 backdrop-blur-md p-1 mb-6 border border-white/40 shadow-inner">
                 <button
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
                     userType === "user"
-                      ? "bg-white/80 shadow-sm text-blue-600"
-                      : "text-gray-600 hover:text-gray-800"
+                      ? "bg-white shadow-md text-blue-600 border border-blue-200"
+                      : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                   }`}
                   onClick={() => setUserType("user")}
                 >
-                  <User className="w-4 h-4 inline mr-2" />
-                  Reader
+                  <User className="w-4 h-4" />
+                  <span>Reader</span>
                 </button>
                 <button
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
                     userType === "admin"
-                      ? "bg-white/80 shadow-sm text-purple-600"
-                      : "text-gray-600 hover:text-gray-800"
+                      ? "bg-white shadow-md text-purple-600 border border-purple-200"
+                      : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                   }`}
                   onClick={() => {
                     setUserType("admin");
@@ -356,71 +358,72 @@ const ModernAuth = () => {
                     }
                   }}
                 >
-                  <Shield className="w-4 h-4 inline mr-2" />
-                  Admin
+                  <Shield className="w-4 h-4" />
+                  <span>Admin</span>
                 </button>
               </div>
               
               {authMode === "signin" ? (
-                <form onSubmit={handleLoginSubmit} className="space-y-5">
+                <form onSubmit={handleLoginSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="email" className="text-sm font-semibold text-gray-800 tracking-wide">Email Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-blue-500" />
                       <Input
                         id="email"
                         name="email"
                         type="email"
-                        placeholder="your@email.com"
+                        placeholder="Enter your email address"
                         value={loginData.email}
                         onChange={handleLoginChange}
-                        className="pl-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-blue-300 transition-all"
+                        className="pl-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="password" className="text-sm font-semibold text-gray-800 tracking-wide">Password</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-blue-500" />
                       <Input
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder="Enter your password"
                         value={loginData.password}
                         onChange={handleLoginChange}
-                        className="pl-12 pr-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-blue-300 transition-all"
+                        className="pl-12 pr-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center space-x-2">
                       <input
                         id="remember"
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 bg-white/50 backdrop-blur-sm"
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 focus:ring-offset-0 bg-white/70 backdrop-blur-sm ring-1 ring-gray-200"
                       />
-                      <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                      <label htmlFor="remember" className="text-sm text-gray-700 font-medium cursor-pointer hover:text-gray-900 transition-colors">
                         Remember me
                       </label>
                     </div>
                     <button
                       type="button"
                       onClick={() => navigate("/forgot-password")}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-sm text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200 hover:underline"
                     >
                       Forgot password?
                     </button>
@@ -428,7 +431,7 @@ const ModernAuth = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group mt-4"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -437,19 +440,19 @@ const ModernAuth = () => {
                         Signing In...
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        Continue
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>Continue</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                       </div>
                     )}
                   </Button>
                 </form>
               ) : (
-                <form onSubmit={handleSignupSubmit} className="space-y-5">
+                <form onSubmit={handleSignupSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <label htmlFor="signup-name" className="text-sm font-medium text-gray-700">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="signup-name" className="text-sm font-semibold text-gray-800 tracking-wide">Full Name</label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-purple-500" />
                       <Input
                         id="signup-name"
                         name="name"
@@ -457,33 +460,33 @@ const ModernAuth = () => {
                         placeholder="Enter your full name"
                         value={signupData.name}
                         onChange={handleSignupChange}
-                        className="pl-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-purple-300 transition-all"
+                        className="pl-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="signup-email" className="text-sm font-medium text-gray-700">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="signup-email" className="text-sm font-semibold text-gray-800 tracking-wide">Email Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-purple-500" />
                       <Input
                         id="signup-email"
                         name="email"
                         type="email"
-                        placeholder="your@email.com"
+                        placeholder="Enter your email address"
                         value={signupData.email}
                         onChange={handleSignupChange}
-                        className="pl-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-purple-300 transition-all"
+                        className="pl-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="signup-password" className="text-sm font-medium text-gray-700">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="signup-password" className="text-sm font-semibold text-gray-800 tracking-wide">Password</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-purple-500" />
                       <Input
                         id="signup-password"
                         name="password"
@@ -491,13 +494,14 @@ const ModernAuth = () => {
                         placeholder="Create a strong password"
                         value={signupData.password}
                         onChange={handleSignupChange}
-                        className="pl-12 pr-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-purple-300 transition-all"
+                        className="pl-12 pr-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -505,9 +509,9 @@ const ModernAuth = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="signup-confirmPassword" className="text-sm font-medium text-gray-700">Confirm Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label htmlFor="signup-confirmPassword" className="text-sm font-semibold text-gray-800 tracking-wide">Confirm Password</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-purple-500" />
                       <Input
                         id="signup-confirmPassword"
                         name="confirmPassword"
@@ -515,34 +519,35 @@ const ModernAuth = () => {
                         placeholder="Confirm your password"
                         value={signupData.confirmPassword}
                         onChange={handleSignupChange}
-                        className="pl-12 pr-12 h-14 bg-white/50 backdrop-blur-sm border-white/30 focus:bg-white/70 focus:border-purple-300 transition-all"
+                        className="pl-12 pr-12 h-14 bg-white/80 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:text-gray-900 transition-all duration-300 rounded-xl shadow-sm"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                       >
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
                   
-                  <div className="flex items-center">
+                  <div className="flex items-start space-x-2 pt-2">
                     <input
                       id="terms"
                       type="checkbox"
-                      className="h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 bg-white/50 backdrop-blur-sm"
+                      className="mt-1 h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 focus:ring-offset-0 bg-white/70 backdrop-blur-sm ring-1 ring-gray-200"
                       required
                     />
-                    <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                      I agree to the <a href="#" className="text-purple-600 hover:text-purple-800 font-medium">Terms of Service</a> and <a href="#" className="text-purple-600 hover:text-purple-800 font-medium">Privacy Policy</a>
+                    <label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed">
+                      I agree to the <a href="#" className="text-purple-600 hover:text-purple-800 font-semibold transition-colors hover:underline">Terms of Service</a> and <a href="#" className="text-purple-600 hover:text-purple-800 font-semibold transition-colors hover:underline">Privacy Policy</a>
                     </label>
                   </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full h-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                    className="w-full h-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group mt-4"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -551,9 +556,9 @@ const ModernAuth = () => {
                         Creating Account...
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        Get Started
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>Get Started</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                       </div>
                     )}
                   </Button>
@@ -582,7 +587,7 @@ const ModernAuth = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center mt-8 text-sm text-gray-500"
+            className="text-center mt-8 text-sm text-gray-500 z-30"
           >
             <p>© 2025 Deoghar Kitab Reads. All rights reserved.</p>
           </motion.div>
