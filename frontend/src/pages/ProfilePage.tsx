@@ -16,11 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [user, setUser] = useState<{email: string, name: string, userType: string, id: string} | null>(null);
+  const { logout, getAuthHeaders, updateUserLocal } = useAuth();
+  const [user, setUser] = useState<{email: string, name: string, userType: string, id: string, _id?: string} | null>(null);
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -51,8 +53,8 @@ const ProfilePage = () => {
       });
       
       // Check user's seller status
-      if (userData.id) {
-        checkSellerStatus(userData.id);
+      if (userData.id || userData._id) {
+        checkSellerStatus(userData.id || userData._id);
       }
     } else {
       // Redirect to login if not logged in
@@ -62,7 +64,9 @@ const ProfilePage = () => {
 
   const checkSellerStatus = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`, {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const userData = await response.json();
         
@@ -102,15 +106,20 @@ const ProfilePage = () => {
     setErrorMessage("");
     setSuccessMessage("");
     
-    // Update user data in localStorage
-    const updatedUser = {
-      ...user,
+    // Update user data in local context
+    updateUserLocal({
       name: profileData.name,
       email: profileData.email
-    };
+    });
     
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
+    // Update state user object
+    if (user) {
+      setUser({
+        ...user,
+        name: profileData.name,
+        email: profileData.email
+      });
+    }
     
     setSuccessMessage("Profile updated successfully!");
     setTimeout(() => setSuccessMessage(""), 3000);
@@ -147,7 +156,7 @@ const ProfilePage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    logout();
     navigate("/");
   };
 
@@ -282,12 +291,10 @@ const ProfilePage = () => {
                           onClick={async () => {
                             if (window.confirm("Are you sure you want to cancel your seller request?")) {
                               try {
-                                const response = await fetch(`http://localhost:3003/api/users/${user.id}/cancel-seller-request`, {
-                                  method: 'PUT',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                });
+                                  const response = await fetch(`http://localhost:3003/api/users/${user.id || user._id}/cancel-seller-request`, {
+                                    method: 'PUT',
+                                    headers: getAuthHeaders(),
+                                  });
                                 
                                 if (response.ok) {
                                   alert("Seller request cancelled successfully.");

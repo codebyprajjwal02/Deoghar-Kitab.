@@ -17,28 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-// Define the book type
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  price: number;
-  originalPrice: number;
-  condition: string;
-  image: string;
-  description: string;
-  category: string;
-  pages: number;
-  publisher: string;
-  publishedDate: string;
-  isbn: string;
-  seller: string;
-  sellerEmail: string; // Added seller email to link to seller data
-  rating: number;
-  reviews: number;
-  inStock: boolean;
-}
+import { initialBooks, Book } from "@/lib/booksData";
 
 // Define seller data type
 interface SellerData {
@@ -50,69 +29,8 @@ interface SellerData {
   showPhone: boolean;
 }
 
-// Mock book data - in a real app this would come from an API
-const mockBooks: Book[] = [
-  {
-    id: 1,
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    price: 299,
-    originalPrice: 399,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-    description: "A gripping tale of racial injustice and childhood innocence in the American South. This Pulitzer Prize-winning novel explores themes of morality, prejudice, and the loss of innocence through the eyes of young Scout Finch.",
-    category: "Fiction",
-    pages: 376,
-    publisher: "J.B. Lippincott & Co.",
-    publishedDate: "1960",
-    isbn: "978-0-06-112008-4",
-    seller: "John Doe",
-    sellerEmail: "john@example.com", // Added seller email
-    rating: 4.8,
-    reviews: 124,
-    inStock: true,
-  },
-  {
-    id: 2,
-    title: "1984",
-    author: "George Orwell",
-    price: 249,
-    originalPrice: 349,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-    description: "A dystopian social science fiction novel and cautionary tale about totalitarianism. The story follows protagonist Winston Smith's rebellion against the oppressive regime of Big Brother and the Party.",
-    category: "Science Fiction",
-    pages: 328,
-    publisher: "Secker & Warburg",
-    publishedDate: "1949",
-    isbn: "978-0-452-28423-4",
-    seller: "Sarah Smith",
-    sellerEmail: "sarah@example.com", // Added seller email
-    rating: 4.9,
-    reviews: 256,
-    inStock: true,
-  },
-  {
-    id: 3,
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    price: 199,
-    originalPrice: 299,
-    condition: "Fair",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-    description: "A romantic novel that critiques the British landed gentry at the end of the 18th century. The story follows the character development of Elizabeth Bennet and her interactions with the proud Mr. Darcy.",
-    category: "Romance",
-    pages: 432,
-    publisher: "T. Egerton",
-    publishedDate: "1813",
-    isbn: "978-0-14-143951-8",
-    seller: "Mike Johnson",
-    sellerEmail: "mike@example.com", // Added seller email
-    rating: 4.7,
-    reviews: 189,
-    inStock: true,
-  },
-];
+const mockBooks: Book[] = initialBooks;
+
 
 // Define the cart item type
 interface CartItem {
@@ -136,8 +54,45 @@ const BookDetails = () => {
   const [sellerData, setSellerData] = useState<SellerData | null>(null); // Added seller data state
 
   useEffect(() => {
-    // Find the book by ID
-    const foundBook = mockBooks.find(b => b.id === parseInt(id || "1"));
+    const bookId = parseInt(id || "1");
+    // Find the book by ID in static books
+    let foundBook = mockBooks.find(b => b.id === bookId);
+    
+    // If not found in static books, search in sellerBooks from localStorage
+    if (!foundBook) {
+      const sellerBooksString = localStorage.getItem("sellerBooks");
+      if (sellerBooksString) {
+        try {
+          const sellerBooks = JSON.parse(sellerBooksString);
+          const sellerBook = sellerBooks.find((b: any) => b.id === bookId && b.status === "Published");
+          if (sellerBook) {
+            foundBook = {
+              id: sellerBook.id,
+              title: sellerBook.title,
+              author: sellerBook.author,
+              price: sellerBook.price,
+              originalPrice: sellerBook.price * 1.4,
+              condition: sellerBook.condition,
+              image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
+              description: "No description provided by the seller.",
+              category: "reference",
+              pages: 300,
+              publisher: "Unknown Publisher",
+              publishedDate: "2023",
+              isbn: "000-0-00-000000-0",
+              seller: "Local Seller",
+              sellerEmail: sellerBook.sellerEmail,
+              rating: 4.5,
+              reviews: 5,
+              inStock: true,
+            };
+          }
+        } catch (e) {
+          console.error("Error loading seller book details:", e);
+        }
+      }
+    }
+
     if (foundBook) {
       setBook(foundBook);
       

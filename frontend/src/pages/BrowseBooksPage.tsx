@@ -15,117 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Footer from "@/components/Footer";
 
-// Sample book data - in a real app, this would come from an API
-const initialBooks = [
-  {
-    id: 1,
-    title: "NCERT Mathematics Class 10",
-    author: "NCERT",
-    price: 299,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-    category: "ncert",
-  },
-  {
-    id: 2,
-    title: "RS Aggarwal Quantitative Aptitude",
-    author: "R.S. Aggarwal",
-    price: 449,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-    category: "competitive",
-  },
-  {
-    id: 3,
-    title: "Lucent's General Knowledge",
-    author: "Lucent Publication",
-    price: 199,
-    condition: "Fair",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-    category: "government",
-  },
-  {
-    id: 4,
-    title: "RD Sharma Class 11",
-    author: "R.D. Sharma",
-    price: 599,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1550399504-8953e1a1f1cb?w=400&h=600&fit=crop",
-    category: "ncert",
-  },
-  {
-    id: 5,
-    title: "Arihant General Studies Paper 2",
-    author: "Arihant Experts",
-    price: 379,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop",
-    category: "government",
-  },
-  {
-    id: 6,
-    title: "NCERT Science Class 9",
-    author: "NCERT",
-    price: 249,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=400&h=600&fit=crop",
-    category: "ncert",
-  },
-  {
-    id: 7,
-    title: "HC Verma Concepts of Physics",
-    author: "H.C. Verma",
-    price: 499,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1532015042219-39c970b67c1e?w=400&h=600&fit=crop",
-    category: "reference",
-  },
-  {
-    id: 8,
-    title: "Disha Chapterwise MCQ",
-    author: "Disha Experts",
-    price: 329,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-    category: "competitive",
-  },
-  {
-    id: 9,
-    title: "NCERT Physics Class 12",
-    author: "NCERT",
-    price: 349,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1531919793100-101fc76d0c92?w=400&h=600&fit=crop",
-    category: "ncert",
-  },
-  {
-    id: 10,
-    title: "Kiran's SSC Mathematics",
-    author: "Kiran Publication",
-    price: 279,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1587369802194-8d30b1e7c8d7?w=400&h=600&fit=crop",
-    category: "government",
-  },
-  {
-    id: 11,
-    title: "Pradeep's Chemistry Class 11",
-    author: "Pradeep Publications",
-    price: 429,
-    condition: "Fair",
-    image: "https://images.unsplash.com/photo-1532015042219-39c970b67c1e?w=400&h=600&fit=crop",
-    category: "reference",
-  },
-  {
-    id: 12,
-    title: "Fast Track Objective Arithmetic",
-    author: "Rajesh Verma",
-    price: 399,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-    category: "competitive",
-  },
-];
+import { initialBooks, Book } from "@/lib/booksData";
+
 
 // Define the seller book type
 interface SellerBook {
@@ -142,17 +33,7 @@ interface SellerBook {
   category?: string;
 }
 
-// Define the book type for BrowseBooksPage
-interface BrowseBook {
-  id: number;
-  title: string;
-  author: string;
-  price: number;
-  condition: string;
-  image: string;
-  category: string;
-  sellerEmail?: string; // Added seller email
-}
+// Using the shared Book type from booksData.ts
 
 // Define the wishlist item type
 interface WishlistItem {
@@ -186,7 +67,7 @@ const BrowseBooksPage = () => {
   const [conditionFilter, setConditionFilter] = useState("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [allBooks, setAllBooks] = useState<BrowseBook[]>(initialBooks);
+  const [allBooks, setAllBooks] = useState<Book[]>(initialBooks);
 
   useEffect(() => {
     // Check if user is logged in
@@ -213,15 +94,25 @@ const BrowseBooksPage = () => {
         // Filter only published books
         const publishedBooks = sellerBooks.filter((book: SellerBook) => book.status === "Published");
         // Convert seller books to the format expected by BrowseBooksPage
-        const formattedSellerBooks = publishedBooks.map((book: SellerBook) => ({
+        const formattedSellerBooks: Book[] = publishedBooks.map((book: SellerBook) => ({
           id: book.id,
           title: book.title,
           author: book.author,
           price: book.price,
+          originalPrice: book.price * 1.4,
           condition: book.condition,
-          image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
-          category: book.category || "reference", // Default category
-          sellerEmail: book.sellerEmail, // Include seller email
+          image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
+          category: book.category || "reference",
+          description: "No description provided by the seller.",
+          pages: 300,
+          publisher: "Unknown Publisher",
+          publishedDate: "2023",
+          isbn: "000-0-00-000000-0",
+          seller: "Local Seller",
+          sellerEmail: book.sellerEmail,
+          rating: 4.5,
+          reviews: 5,
+          inStock: true,
         }));
         
         // Combine initial books with published seller books

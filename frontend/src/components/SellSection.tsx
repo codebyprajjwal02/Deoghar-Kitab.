@@ -16,7 +16,8 @@ import { useNavigate } from "react-router-dom";
 import SellerRegistrationForm from "@/components/SellerRegistrationForm";
 
 interface UserData {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   userType: string;
@@ -46,14 +47,23 @@ const SellSection = () => {
       setIsLoggedIn(true);
       setUser(userData);
       
-      // Check user's seller status
-      checkSellerStatus(userData.id);
+      // Check user's seller status safely supporting id or _id
+      const userId = userData.id || userData._id;
+      if (userId) {
+        checkSellerStatus(userId);
+      }
     }
   }, []);
 
   const checkSellerStatus = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        }
+      });
       if (response.ok) {
         const userData = await response.json();
         
@@ -99,10 +109,12 @@ const SellSection = () => {
   const handleCancelRequest = async () => {
     if (window.confirm("Are you sure you want to cancel your seller request?")) {
       try {
-        const response = await fetch(`http://localhost:3003/api/users/${user.id}/cancel-seller-request`, {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://localhost:3003/api/users/${user?.id || user?._id}/cancel-seller-request`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           },
         });
         

@@ -113,6 +113,7 @@ const SellerRegistrationForm = ({ onSubmit, onCancel }: SellerRegistrationFormPr
         }
         
         const userData = JSON.parse(userString);
+        const token = localStorage.getItem("token");
         
         // Prepare seller request data
         const sellerRequestData = {
@@ -120,14 +121,15 @@ const SellerRegistrationForm = ({ onSubmit, onCancel }: SellerRegistrationFormPr
           phone: formData.phone,
           location: formData.location,
           bio: formData.bio,
-          email: formData.email // Using the email from form, though it should match the logged-in user's email
+          email: formData.email
         };
         
         // Send the seller request to the backend
-        const response = await fetch(`http://localhost:3003/api/users/${userData.id}/request-seller`, {
+        const response = await fetch(`http://localhost:3003/api/users/${userData.id || userData._id}/request-seller`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           },
           body: JSON.stringify(sellerRequestData),
         });

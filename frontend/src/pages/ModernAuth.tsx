@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RegisteredUser {
   name: string;
@@ -90,6 +91,7 @@ const GlassCard = ({ children }: { children: React.ReactNode }) => (
 
 const ModernAuth = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [userType, setUserType] = useState<"user" | "admin">("user");
   const [showPassword, setShowPassword] = useState(false);
@@ -113,7 +115,7 @@ const ModernAuth = () => {
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     const savedPassword = localStorage.getItem("rememberedPassword");
-    if (savedEmail && savedPassword) {
+    if (savedEmail && savedEmail.includes("@") && savedPassword) {
       setLoginData({
         email: savedEmail,
         password: savedPassword,
@@ -140,7 +142,7 @@ const ModernAuth = () => {
     if (error) setError("");
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (userType === "admin") {
@@ -149,95 +151,80 @@ const ModernAuth = () => {
     }
     
     setIsLoading(true);
-    setShowLoading(true);
+    setError("");
     
-    // Simulate API call delay
-    setTimeout(() => {
-      const registeredUsersString = localStorage.getItem("registeredUsers");
-      const registeredUsers = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+    try {
+      const response = await fetch("http://localhost:3003/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password
+        })
+      });
       
-      const user = registeredUsers.find((u: RegisteredUser) => u.email === loginData.email);
+      const data = await response.json();
       
-      if (!user) {
-        setError("No account found with this email. Please sign up first.");
-        setIsLoading(false);
-        setShowLoading(false);
-        return;
-      }
-      
-      if (user.password !== loginData.password) {
-        setError("Incorrect password. Please try again.");
-        setIsLoading(false);
-        setShowLoading(false);
-        return;
-      }
-      
-      setError("");
-      localStorage.setItem("user", JSON.stringify({
-        name: user.name,
-        email: user.email,
-        userType: userType
-      }));
-      
-      if (rememberMe) {
-        localStorage.setItem("rememberedEmail", loginData.email);
-        localStorage.setItem("rememberedPassword", loginData.password);
+      if (response.ok) {
+        login(data, data.token, rememberMe);
+        setShowLoading(true);
       } else {
-        localStorage.removeItem("rememberedEmail");
-        localStorage.removeItem("rememberedPassword");
+        setError(data.message || "Invalid email or password. Please try again.");
+        setIsLoading(false);
       }
-    }, 1500);
+    } catch (err) {
+      console.error("Login API error:", err);
+      setError("Unable to connect to the backend server. Please make sure the server is running.");
+      setIsLoading(false);
+    }
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    setIsLoading(true);
-    setShowLoading(true);
+    if (signupData.password !== signupData.confirmPassword) {
+      setError("Passwords do not match. Please try again.");
+      return;
+    }
     
-    setTimeout(() => {
-      if (signupData.password !== signupData.confirmPassword) {
-        setError("Passwords do not match. Please try again.");
+    if (signupData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const response = await fetch("http://localhost:3003/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: signupData.name,
+          email: signupData.email,
+          password: signupData.password,
+          userType: "user"
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        login(data, data.token);
+        setShowLoading(true);
+      } else {
+        setError(data.message || "Registration failed. Please try again.");
         setIsLoading(false);
-        setShowLoading(false);
-        return;
       }
-      
-      if (signupData.password.length < 6) {
-        setError("Password must be at least 6 characters long.");
-        setIsLoading(false);
-        setShowLoading(false);
-        return;
-      }
-      
-      const registeredUsersString = localStorage.getItem("registeredUsers");
-      const registeredUsers = registeredUsersString ? JSON.parse(registeredUsersString) : [];
-      
-      const existingUser = registeredUsers.find((u: RegisteredUser) => u.email === signupData.email);
-      if (existingUser) {
-        setError("An account with this email already exists. Please sign in instead.");
-        setIsLoading(false);
-        setShowLoading(false);
-        return;
-      }
-      
-      setError("");
-      
-      const newUser = {
-        name: signupData.name,
-        email: signupData.email,
-        password: signupData.password,
-      };
-      
-      const updatedUsers = [...registeredUsers, newUser];
-      localStorage.setItem("registeredUsers", JSON.stringify(updatedUsers));
-      
-      localStorage.setItem("user", JSON.stringify({
-        name: signupData.name,
-        email: signupData.email,
-        userType: "user"
-      }));
-    }, 1500);
+    } catch (err) {
+      console.error("Registration API error:", err);
+      setError("Unable to connect to the backend server. Please make sure the server is running.");
+      setIsLoading(false);
+    }
   };
 
   const handleLoadingComplete = () => {

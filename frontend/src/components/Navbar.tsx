@@ -4,12 +4,12 @@ import { BookOpen, Menu, X, Moon, Sun, Languages, User as UserIcon, LogOut, Shop
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [cartItemCount, setCartItemCount] = useState(0);
   const [wishlistItemCount, setWishlistItemCount] = useState(0);
   const { theme, setTheme } = useTheme();
@@ -21,16 +21,6 @@ const Navbar = () => {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Check if user is logged in
-  useEffect(() => {
-    const userString = localStorage.getItem("user");
-    if (userString) {
-      const userData = JSON.parse(userString);
-      setIsLoggedIn(true);
-      setUser(userData);
-    }
   }, []);
 
   // Check cart item count
@@ -85,11 +75,8 @@ const Navbar = () => {
   }, []);
 
   const handleSignOut = () => {
-    // Remove user from localStorage
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    // Redirect to home page
+    logout();
+    // Redirect to auth landing page
     window.location.href = "/";
   };
 
@@ -107,6 +94,8 @@ const Navbar = () => {
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "hi" : "en");
   };
+
+  const isAtHomeTop = !isScrolled && (window.location.pathname === "/home" || window.location.pathname === "/deoghar-kitab-reads/" || window.location.pathname === "/deoghar-kitab-reads/home");
 
   return (
     <motion.nav
@@ -134,16 +123,24 @@ const Navbar = () => {
             <a
               key={link.href}
               href={link.href}
-              className="text-foreground/80 hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+              className={`transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full ${
+                isAtHomeTop 
+                  ? "text-white/90 hover:text-white" 
+                  : "text-foreground/80 hover:text-primary"
+              }`}
             >
               {link.label}
             </a>
           ))}
           
-          {isLoggedIn && user?.userType !== "admin" && (
+          {isAuthenticated && user?.userType !== "admin" && (
             <a
               href="/seller"
-              className="text-foreground/80 hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+              className={`transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full ${
+                isAtHomeTop 
+                  ? "text-white/90 hover:text-white" 
+                  : "text-foreground/80 hover:text-primary"
+              }`}
             >
               Seller Dashboard
             </a>
@@ -166,8 +163,12 @@ const Navbar = () => {
                 transition={{ duration: 0.3 }}
                 className="flex items-center gap-1"
               >
-                <Languages className="w-5 h-5 text-foreground/80 group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
+                <Languages className={`w-5 h-5 transition-colors ${
+                  isAtHomeTop ? "text-white/90 group-hover:text-white" : "text-foreground/80 group-hover:text-primary"
+                }`} />
+                <span className={`text-sm font-medium transition-colors ${
+                  isAtHomeTop ? "text-white/90 group-hover:text-white" : "text-foreground/80 group-hover:text-primary"
+                }`}>
                   {language.toUpperCase()}
                 </span>
               </motion.div>
@@ -194,14 +195,21 @@ const Navbar = () => {
                 {theme === "dark" ? (
                   <Sun className="w-5 h-5 text-primary animate-glow" />
                 ) : (
-                  <Moon className="w-5 h-5 text-foreground/80 hover:text-primary transition-colors" />
+                  <Moon className={`w-5 h-5 transition-colors ${
+                    isAtHomeTop ? "text-white/90 hover:text-white" : "text-foreground/80 hover:text-primary"
+                  }`} />
                 )}
               </motion.div>
             </AnimatePresence>
           </motion.button>
 
           {/* Wishlist Icon */}
-          <a href="/wishlist" className="relative text-foreground/80 hover:text-primary transition-colors">
+          <a 
+            href="/wishlist" 
+            className={`relative transition-colors ${
+              isAtHomeTop ? "text-white/90 hover:text-white" : "text-foreground/80 hover:text-primary"
+            }`}
+          >
             <Heart className="w-5 h-5" />
             {wishlistItemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -211,7 +219,12 @@ const Navbar = () => {
           </a>
 
           {/* Cart Icon */}
-          <a href="/cart" className="relative text-foreground/80 hover:text-primary transition-colors">
+          <a 
+            href="/cart" 
+            className={`relative transition-colors ${
+              isAtHomeTop ? "text-white/90 hover:text-white" : "text-foreground/80 hover:text-primary"
+            }`}
+          >
             <ShoppingCart className="w-5 h-5" />
             {cartItemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -220,14 +233,19 @@ const Navbar = () => {
             )}
           </a>
 
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <div className="flex items-center gap-2">
               {/* Profile Icon Only */}
-              <a href="/profile" className="text-foreground/80 hover:text-primary transition-colors">
+              <a 
+                href="/profile" 
+                className={`transition-colors ${
+                  isAtHomeTop ? "text-white/90 hover:text-white" : "text-foreground/80 hover:text-primary"
+                }`}
+              >
                 <UserIcon className="w-5 h-5" />
               </a>
               <Button 
-                variant="outline" 
+                variant={isAtHomeTop ? "secondary" : "outline"} 
                 size="sm"
                 onClick={handleSignOut}
                 className="flex items-center gap-1"
@@ -277,7 +295,7 @@ const Navbar = () => {
                 </a>
               ))}
               
-              {isLoggedIn && user?.userType !== "admin" && (
+              {isAuthenticated && user?.userType !== "admin" && (
                 <a
                   href="/seller"
                   className="text-foreground/80 hover:text-primary transition-colors py-2"
@@ -350,7 +368,7 @@ const Navbar = () => {
                 )}
               </a>
 
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <div className="flex flex-col gap-2">
                   <a 
                     href="/profile" 

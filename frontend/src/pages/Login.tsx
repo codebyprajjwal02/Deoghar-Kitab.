@@ -8,6 +8,7 @@ import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define user type
 interface RegisteredUser {
@@ -19,6 +20,7 @@ interface RegisteredUser {
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"buyer" | "seller" | "admin">("buyer");
   const [formData, setFormData] = useState({
@@ -50,7 +52,6 @@ const Login = () => {
     
     // Show loading animation
     setIsLoading(true);
-    setShowLoading(true);
     
     try {
       // Prepare login data
@@ -68,25 +69,17 @@ const Login = () => {
         body: JSON.stringify(loginData),
       });
       
+      const userData = await response.json();
+
       if (response.ok) {
-        const userData = await response.json();
-        
-        // Store user data in localStorage to indicate they're logged in
-        localStorage.setItem("user", JSON.stringify({
-          id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          userType: userData.userType
-        }));
+        // Store user and token via AuthContext
+        login(userData, userData.token);
         
         // Clear any previous errors
         setError("");
-        
-        // Navigate based on user type
-        // The actual navigation will happen in the LoadingAnimation component
+        setShowLoading(true);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Login failed. Please check your credentials.");
+        setError(userData.message || "Login failed. Please check your credentials.");
         setIsLoading(false);
         setShowLoading(false);
       }
@@ -102,7 +95,7 @@ const Login = () => {
     if (userType === "admin") {
       navigate("/admin");
     } else {
-      navigate("/");
+      navigate("/home");
     }
   };
 

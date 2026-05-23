@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define interfaces for better type safety
 interface SellerData {
@@ -71,6 +72,7 @@ interface SellerBook {
 const SellerDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { getAuthHeaders, user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<"add" | "manage" | "analytics" | "profile">("add");
   const [formData, setFormData] = useState({
     title: "",
@@ -84,21 +86,15 @@ const SellerDashboard = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [user, setUser] = useState<{email: string, userType: string} | null>(null);
   const [sellerData, setSellerData] = useState<SellerData | null>(null);
 
   // Load seller books from the backend
   const [sellerBooks, setSellerBooks] = useState<SellerBook[]>([]);
 
   useEffect(() => {
-    // Check if user is logged in
-    const userString = localStorage.getItem("user");
-    if (userString) {
-      const userData = JSON.parse(userString);
-      setUser(userData);
-      
+    if (authUser) {
       // Load seller data
-      const sellerDataString = localStorage.getItem(`seller_${userData.email}`);
+      const sellerDataString = localStorage.getItem(`seller_${authUser.email}`);
       if (sellerDataString) {
         const parsedSellerData = JSON.parse(sellerDataString);
         // Ensure showPhone field exists (for backward compatibility)
@@ -109,16 +105,18 @@ const SellerDashboard = () => {
       }
       
       // Check user's seller status from the backend
-      checkSellerStatus(userData.id);
+      checkSellerStatus(authUser.id || authUser._id);
     } else {
       // Redirect to login if not logged in
       navigate("/");
     }
-  }, [navigate]);
+  }, [authUser, navigate]);
 
   const checkSellerStatus = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/users/${userId}`);
+      const response = await fetch(`http://localhost:3003/api/users/${userId}`, {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const userData = await response.json();
         
@@ -147,7 +145,9 @@ const SellerDashboard = () => {
 
   const fetchSellerBooks = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/books/seller/${userId}`);
+      const response = await fetch(`http://localhost:3003/api/books/seller/${userId}`, {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const books: {
           _id: string;
@@ -172,7 +172,7 @@ const SellerDashboard = () => {
           date: book.createdAt ? new Date(book.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           sales: 0, // Placeholder - you may want to track sales in your backend
           revenue: 0, // Placeholder - you may want to track revenue in your backend
-          sellerEmail: user?.email || "",
+          sellerEmail: authUser?.email || "",
           category: book.category,
           description: book.description,
         }));
@@ -214,16 +214,12 @@ const SellerDashboard = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!authUser) {
+      alert("User not logged in");
+      return;
+    }
+    
     try {
-      // Get the user ID from localStorage (you may need to adjust this based on your auth system)
-      const userString = localStorage.getItem("user");
-      if (!userString) {
-        alert("User not logged in");
-        return;
-      }
-      
-      const userData = JSON.parse(userString);
-      
       // Prepare the book data
       const bookData = {
         title: formData.title,
@@ -232,11 +228,11 @@ const SellerDashboard = () => {
         price: parseInt(formData.price),
         category: formData.category,
         condition: formData.condition,
-        seller: userData.id, // assuming user ID is stored in userData.id
-        sellerName: userData.name || "Unknown Seller",
+        seller: authUser.id || authUser._id,
+        sellerName: authUser.name || "Unknown Seller",
         contactInfo: {
           phone: sellerData?.phone || "",
-          email: userData.email
+          email: authUser.email
         },
         status: "available"
       };
@@ -246,6 +242,7 @@ const SellerDashboard = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders()
         },
         body: JSON.stringify(bookData),
       });
@@ -260,7 +257,7 @@ const SellerDashboard = () => {
           date: new Date().toISOString().split('T')[0],
           sales: 0,
           revenue: 0,
-          sellerEmail: user?.email || "",
+          sellerEmail: authUser?.email || "",
         }];
         setSellerBooks(updatedBooks);
         
@@ -308,7 +305,7 @@ const SellerDashboard = () => {
   });
 
   // Filter books for current seller only
-  const sellerSpecificBooks = sellerBooks.filter(book => book.sellerEmail === user?.email);
+  const sellerSpecificBooks = sellerBooks.filter(book => book.sellerEmail === authUser?.email);
 
   const stats = [
     { title: "Total Books", value: sellerSpecificBooks.length.toString(), icon: Book, change: "+2" },
@@ -333,8 +330,8 @@ const SellerDashboard = () => {
                 <User className="w-4 h-4 text-primary-foreground" />
               </div>
               <div>
-                <span className="text-sm font-medium">{sellerData?.name || user?.email}</span>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <span className="text-sm font-medium">{sellerData?.name || authUser?.email}</span>
+                <p className="text-xs text-muted-foreground">{authUser?.email}</p>
               </div>
             </div>
           </div>
@@ -585,7 +582,7 @@ const SellerDashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBooks.filter(book => book.sellerEmail === user?.email).map((book) => (
+                  {filteredBooks.filter(book => book.sellerEmail === authUser?.email).map((book) => (
                     <TableRow key={book.id}>
                       <TableCell className="font-medium">{book.title}</TableCell>
                       <TableCell>{book.author}</TableCell>
@@ -623,7 +620,7 @@ const SellerDashboard = () => {
             </CardContent>
             <CardFooter className="flex justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {filteredBooks.filter(book => book.sellerEmail === user?.email).length} of {sellerSpecificBooks.length} books
+                Showing {filteredBooks.filter(book => book.sellerEmail === authUser?.email).length} of {sellerSpecificBooks.length} books
               </div>
               <div className="flex gap-2">
                 <Button variant="outline">Previous</Button>

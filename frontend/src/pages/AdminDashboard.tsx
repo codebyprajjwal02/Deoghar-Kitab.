@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Table,
@@ -140,6 +141,7 @@ interface PasswordData {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { getAuthHeaders } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
@@ -254,7 +256,9 @@ const AdminDashboard = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await fetch("http://localhost:3003/api/books");
+      const response = await fetch("http://localhost:3003/api/books", {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const booksData: BackendBook[] = await response.json();
         // Transform backend books to match our interface
@@ -279,7 +283,9 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:3003/api/users");
+      const response = await fetch("http://localhost:3003/api/users", {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const usersData: BackendUser[] = await response.json();
         // Transform backend users to match our interface
@@ -319,7 +325,9 @@ const AdminDashboard = () => {
   const fetchPendingSellers = async () => {
     try {
       // Fetch all users
-      const response = await fetch("http://localhost:3003/api/users");
+      const response = await fetch("http://localhost:3003/api/users", {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const usersData: BackendUser[] = await response.json();
         // Filter for users who have requested to become sellers but are not yet approved
@@ -376,6 +384,7 @@ const AdminDashboard = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders()
         },
         body: JSON.stringify({ status })
       });
@@ -401,6 +410,7 @@ const AdminDashboard = () => {
       // Delete the user from the backend
       const response = await fetch(`http://localhost:3003/api/users/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders()
       });
       
       if (response.ok) {
@@ -502,7 +512,9 @@ const AdminDashboard = () => {
   const approveSeller = async (email: string) => {
     try {
       // Find the user ID by email
-      const userResponse = await fetch(`http://localhost:3003/api/users`);
+      const userResponse = await fetch(`http://localhost:3003/api/users`, {
+        headers: getAuthHeaders()
+      });
       if (userResponse.ok) {
         const usersData: BackendUser[] = await userResponse.json();
         const userToApprove = usersData.find(user => user.email === email);
@@ -513,6 +525,7 @@ const AdminDashboard = () => {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
+              ...getAuthHeaders()
             },
           });
           
@@ -540,7 +553,9 @@ const AdminDashboard = () => {
   const rejectSeller = async (email: string) => {
     try {
       // Find the user ID by email
-      const userResponse = await fetch(`http://localhost:3003/api/users`);
+      const userResponse = await fetch(`http://localhost:3003/api/users`, {
+        headers: getAuthHeaders()
+      });
       if (userResponse.ok) {
         const usersData: BackendUser[] = await userResponse.json();
         const userToReject = usersData.find(user => user.email === email);
@@ -551,6 +566,7 @@ const AdminDashboard = () => {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
+              ...getAuthHeaders()
             },
           });
           

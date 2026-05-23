@@ -39,7 +39,7 @@ const AuthPage = () => {
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     const savedPassword = localStorage.getItem("rememberedPassword");
-    if (savedEmail && savedPassword) {
+    if (savedEmail && savedEmail.includes("@") && savedPassword) {
       setLoginData({
         email: savedEmail,
         password: savedPassword,

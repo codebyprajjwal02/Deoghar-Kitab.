@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "@/pages/Index";
 import AuthPage from "@/pages/AuthPage";
 import ModernAuth from "@/pages/ModernAuth";
@@ -19,6 +20,7 @@ import CartPage from "@/pages/CartPage";
 import WishlistPage from "@/pages/WishlistPage";
 import BrowseBooksPage from "@/pages/BrowseBooksPage";
 import NotFound from "@/pages/NotFound";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -27,29 +29,77 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<ModernAuth />} />
-                <Route path="/classic-auth" element={<AuthPage />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/home" element={<Index />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/seller" element={<SellerDashboardWrapper />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/book/:id" element={<BookDetails />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/wishlist" element={<WishlistPage />} />
-                <Route path="/browse" element={<BrowseBooksPage />} />
-                <Route path="/payment/:id" element={<PaymentPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<ModernAuth />} />
+                  <Route path="/classic-auth" element={<AuthPage />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/home" element={<Index />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  
+                  {/* Protected Routes */}
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/seller" 
+                    element={
+                      <ProtectedRoute allowedRoles={["seller", "admin"]}>
+                        <SellerDashboardWrapper />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/cart" 
+                    element={
+                      <ProtectedRoute>
+                        <CartPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/wishlist" 
+                    element={
+                      <ProtectedRoute>
+                        <WishlistPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/payment/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <PaymentPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Public Content Routes */}
+                  <Route path="/book/:id" element={<BookDetails />} />
+                  <Route path="/browse" element={<BrowseBooksPage />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>

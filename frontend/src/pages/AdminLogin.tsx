@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
@@ -33,7 +35,6 @@ const AdminLogin = () => {
     
     // Show loading animation
     setIsLoading(true);
-    setShowLoading(true);
     
     try {
       // Prepare login data
@@ -51,28 +52,23 @@ const AdminLogin = () => {
         body: JSON.stringify(loginDataToSend),
       });
       
+      const userData = await response.json();
+
       if (response.ok) {
-        const userData = await response.json();
-        
         // Check if user is an admin
         if (userData.userType === "admin") {
-          // Store user in localStorage to indicate they're logged in as admin
-          localStorage.setItem("user", JSON.stringify({
-            id: userData._id,
-            email: userData.email,
-            name: userData.name,
-            userType: userData.userType
-          }));
+          // Store user and token via AuthContext
+          login(userData, userData.token);
           
-          // Navigate to admin dashboard will happen in the LoadingAnimation component
+          setError("");
+          setShowLoading(true);
         } else {
           setError("Access denied. Admin privileges required.");
           setIsLoading(false);
           setShowLoading(false);
         }
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Invalid admin credentials. Access restricted to authorized personnel only.");
+        setError(userData.message || "Invalid admin credentials. Access restricted to authorized personnel only.");
         setIsLoading(false);
         setShowLoading(false);
       }

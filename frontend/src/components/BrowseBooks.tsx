@@ -14,19 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
-// Define the book type
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  price: number;
-  condition: string;
-  image: string;
-  sellerEmail?: string;
-  status?: string;
-}
+import { initialBooks, Book } from "@/lib/booksData";
 
-// Define the seller book type
 interface SellerBook {
   id: number;
   title: string;
@@ -40,57 +29,6 @@ interface SellerBook {
   sellerEmail: string;
 }
 
-// Initial hardcoded books
-const initialBooks: Book[] = [
-  {
-    id: 1,
-    title: "NCERT Mathematics Class 10",
-    author: "NCERT",
-    price: 299,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-  },
-  {
-    id: 2,
-    title: "RS Aggarwal Quantitative Aptitude",
-    author: "R.S. Aggarwal",
-    price: 449,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Lucent's General Knowledge",
-    author: "Lucent Publication",
-    price: 199,
-    condition: "Fair",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-  },
-  {
-    id: 4,
-    title: "RD Sharma Class 11",
-    author: "R.D. Sharma",
-    price: 599,
-    condition: "Excellent",
-    image: "https://images.unsplash.com/photo-1550399504-8953e1a1f1cb?w=400&h=600&fit=crop",
-  },
-  {
-    id: 5,
-    title: "Arihant General Studies Paper 2",
-    author: "Arihant Experts",
-    price: 379,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop",
-  },
-  {
-    id: 6,
-    title: "NCERT Science Class 9",
-    author: "NCERT",
-    price: 249,
-    condition: "Good",
-    image: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=400&h=600&fit=crop",
-  },
-];
 
 const BrowseBooks = () => {
   const navigate = useNavigate();
@@ -122,9 +60,20 @@ const BrowseBooks = () => {
           title: book.title,
           author: book.author,
           price: book.price,
+          originalPrice: book.price * 1.4,
           condition: book.condition,
           image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop", // Default image
-          sellerEmail: book.sellerEmail, // Include seller email
+          category: "reference",
+          description: "No description provided by the seller.",
+          pages: 300,
+          publisher: "Unknown Publisher",
+          publishedDate: "2023",
+          isbn: "000-0-00-000000-0",
+          seller: "Local Seller",
+          sellerEmail: book.sellerEmail,
+          rating: 4.5,
+          reviews: 5,
+          inStock: true,
         }));
         
         // Combine initial books with published seller books

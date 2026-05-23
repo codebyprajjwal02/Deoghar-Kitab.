@@ -1,4 +1,12 @@
 const { User } = require('../models');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'deoghar_kitab_secret_key', {
+    expiresIn: '30d',
+  });
+};
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -36,16 +44,27 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
     
-    // Create new user (password is already hashed by middleware)
+    // Create new user (password is automatically hashed by pre-save hook)
     const user = new User({
       name,
       email,
-      password, // Already hashed
+      password,
       userType
     });
     
     const savedUser = await user.save();
-    res.status(201).json(savedUser);
+    
+    // Generate Token
+    const token = generateToken(savedUser._id);
+    
+    res.status(201).json({
+      _id: savedUser._id,
+      id: savedUser._id,
+      name: savedUser.name,
+      email: savedUser.email,
+      userType: savedUser.userType,
+      token
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
@@ -105,14 +124,16 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
     
-    // Return user data (without password)
+    // Return user data (including token, without password)
     res.json({
       _id: user._id,
+      id: user._id,
       name: user.name,
       email: user.email,
       userType: user.userType,
       sellerRequest: user.sellerRequest,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      token: generateToken(user._id)
     });
   } catch (error) {
     console.error(error);

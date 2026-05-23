@@ -3,91 +3,73 @@ import { useNavigate } from "react-router-dom";
 import SellerRegistrationForm from "@/components/SellerRegistrationForm";
 import SellerDashboard from "@/pages/SellerDashboard";
 import { SellerData } from "@/components/SellerRegistrationForm";
-
-// Define the seller type for the global list
-interface RegisteredSeller extends SellerData {
-  email: string;
-  status: string;
-  registeredDate: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
 
 const SellerDashboardWrapper = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{email: string, userType: string} | null>(null);
+  const { user, getAuthHeaders } = useAuth();
   const [isSellerRegistered, setIsSellerRegistered] = useState(false);
-  const [showRegistrationForm, setShowRegistrationForm] = useState(true); // Always show form initially
+  const [showRegistrationForm, setShowRegistrationForm] = useState(true);
   const [isAdminApproved, setIsAdminApproved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
-    const userString = localStorage.getItem("user");
-    if (userString) {
-      const userData = JSON.parse(userString);
-      setUser(userData);
-      
-      // Check if user is already registered as a seller
-      const sellerDataString = localStorage.getItem(`seller_${userData.email}`);
-      if (sellerDataString) {
-        setIsSellerRegistered(true);
-        
-        // Check if admin has approved the seller
-        const allSellersString = localStorage.getItem("all_sellers");
-        if (allSellersString) {
-          try {
-            const allSellers: RegisteredSeller[] = JSON.parse(allSellersString);
-            const seller = allSellers.find(s => s.email === userData.email);
-            if (seller && seller.status === "approved") {
-              setIsAdminApproved(true);
-              setShowRegistrationForm(false);
-            }
-            // If pending or rejected, keep showRegistrationForm as false but show a message
-          } catch (error) {
-            console.error("Error parsing sellers data:", error);
+    if (!user) {
+      navigate("/");
+      return;
+    }
+
+    const checkSellerRequestStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:3003/api/users/${user.id || user._id}`, {
+          headers: getAuthHeaders()
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.userType === "seller") {
+            setIsSellerRegistered(true);
+            setIsAdminApproved(true);
+            setShowRegistrationForm(false);
+          } else if (userData.sellerRequest && userData.sellerRequest.requested) {
+            setIsSellerRegistered(true);
+            setIsAdminApproved(false);
+            setShowRegistrationForm(false);
+          } else {
+            setIsSellerRegistered(false);
+            setShowRegistrationForm(true);
           }
         }
+      } catch (error) {
+        console.error("Error checking seller status:", error);
+      } finally {
+        setLoading(false);
       }
-      // If no seller data, keep showRegistrationForm as true to show the form
-    } else {
-      // Redirect to login if not logged in
-      navigate("/");
-    }
-  }, [navigate]);
+    };
 
-  const handleSellerRegistration = (sellerData: SellerData) => {
-    if (user) {
-      // Save seller data to localStorage
-      localStorage.setItem(`seller_${user.email}`, JSON.stringify(sellerData));
-      setIsSellerRegistered(true);
-      setShowRegistrationForm(false);
-      
-      // Also save to a global sellers list for admin to see
-      const existingSellers = localStorage.getItem("all_sellers");
-      const allSellers: RegisteredSeller[] = existingSellers ? JSON.parse(existingSellers) : [];
-      
-      // Check if seller already exists in the list
-      const sellerExists = allSellers.some((seller) => seller.email === user.email);
-      
-      if (!sellerExists) {
-        const newSeller: RegisteredSeller = {
-          ...sellerData,
-          email: user.email,
-          status: "pending", // Pending approval by admin
-          registeredDate: new Date().toISOString().split('T')[0]
-        };
-        allSellers.push(newSeller);
-        localStorage.setItem("all_sellers", JSON.stringify(allSellers));
-      }
-      
-      // Show message that registration is pending approval
-      alert("Your seller registration is submitted and pending admin approval.");
-      navigate("/home");
-    }
+    checkSellerRequestStatus();
+  }, [user, navigate]);
+
+  const handleSellerRegistration = () => {
+    // Registration form will handle submitting the request to API.
+    // We just refresh the state here by setting registered to true.
+    setIsSellerRegistered(true);
+    setShowRegistrationForm(false);
+    
+    alert("Your seller registration is submitted and pending admin approval.");
+    navigate("/home");
   };
 
   const handleCancelRegistration = () => {
-    // Redirect to home page if user cancels registration
     navigate("/home");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

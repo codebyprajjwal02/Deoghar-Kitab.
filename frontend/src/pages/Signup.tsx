@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<"buyer" | "seller">("buyer");
@@ -55,26 +57,21 @@ const Signup = () => {
         body: JSON.stringify(userData),
       });
       
+      const responseData = await response.json();
+
       if (response.ok) {
-        const newUser = await response.json();
-        console.log("User registered successfully:", newUser);
+        console.log("User registered successfully:", responseData);
         
-        // Store user data in localStorage (you might want to implement proper auth)
-        localStorage.setItem("user", JSON.stringify({
-          id: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-          userType: newUser.userType
-        }));
+        // Store user and token via AuthContext
+        login(responseData, responseData.token);
         
         // Show success message
         alert("Account created successfully!");
         
         // Navigate to home after signup
-        navigate("/");
+        navigate("/home");
       } else {
-        const errorData = await response.json();
-        alert(`Registration failed: ${errorData.message || "Unknown error"}`);
+        alert(`Registration failed: ${responseData.message || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error during registration:", error);
